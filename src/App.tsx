@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { HelpCircle, Move } from 'lucide-react';
 import { signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
 import { collection, doc, setDoc, onSnapshot } from 'firebase/firestore';
@@ -38,15 +38,15 @@ export default function App() {
   // Fallback Logic
   const currentData = datasets[activeTab] || INITIAL_DATASETS.targaryen;
   
-  const theme = {
+  const theme = useMemo(() => ({
       ...currentData.theme,
       seat: currentData.theme.seat || (INITIAL_DATASETS[activeTab] ? INITIAL_DATASETS[activeTab]?.theme?.seat : ''),
       history: currentData.theme.history || (INITIAL_DATASETS[activeTab] ? INITIAL_DATASETS[activeTab]?.theme?.history : '')
-  };
+  }), [currentData.theme, activeTab]);
 
   const characters = currentData.characters;
   const connections = currentData.connections;
-  const themeConfig = theme.config || COLOR_THEMES.black;
+  const themeConfig = useMemo(() => theme.config || COLOR_THEMES.black, [theme.config]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.8);
@@ -140,7 +140,7 @@ export default function App() {
     setSearchResults(results);
   }, [searchQuery, getAllCharacters]);
 
-  const navigateToCharacterHouse = (char: Character) => {
+  const navigateToCharacterHouse = useCallback((char: Character) => {
     if (!datasets[char.house || '']) {
         setAlertInfo({ title: "Casa no disponible", message: "Esta casa no tiene su propia pestaña activa." });
         return;
@@ -148,7 +148,7 @@ export default function App() {
     setActiveTab(char.house!);
     setFocusTarget(char.id);
     setSearchQuery(''); setIsSearchOpen(false);
-  };
+  }, [datasets]);
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
     if (!containerRef.current) return;
@@ -165,12 +165,12 @@ export default function App() {
     setPosition({ x: newX, y: newY });
   }, [scale, position]);
 
-  const handleNodeDragStart = (e: React.MouseEvent, charId: string) => {
+  const handleNodeDragStart = useCallback((e: React.MouseEvent, charId: string) => {
     const target = e.target as HTMLElement;
     if (target.closest('button') || target.closest('a') || target.closest('.no-drag')) return;
     e.stopPropagation(); e.preventDefault();
     setDraggingNode(charId); setActiveMenu(null);
-  };
+  }, []);
 
   const handleCanvasMouseDown = (e: React.MouseEvent) => {
     setIsPanning(true);
@@ -203,7 +203,7 @@ export default function App() {
     setIsPanning(false); setDraggingNode(null);
   };
 
-  const deleteCharacter = (id: string) => { setDeleteTargetId(id); setActiveMenu(null); };
+  const deleteCharacter = useCallback((id: string) => { setDeleteTargetId(id); setActiveMenu(null); }, []);
 
   const executeDeleteCharacter = () => {
     if (!deleteTargetId) return;
@@ -429,7 +429,7 @@ export default function App() {
     if (focusTarget) { centerView(focusTarget); setFocusTarget(null); } else { centerView(); }
   }, [activeTab]);
 
-  const openModalWrapper = (mode: typeof modalMode, charId: string) => {
+  const openModalWrapper = useCallback((mode: typeof modalMode, charId: string) => {
     setModalMode(mode); setSelectedCharId(charId); setIsLinkingExisting(false); setLinkCharId('');
     if (mode === 'add-root') {
          setFormData({ name: '', title: '', house: activeTab, isKing: false, isBastard: false, isNonCanon: false, isDragonRider: false, dragonName: '', isGap: false, imageUrl: '', birthYear: '', deathYear: '', lore: '', status: 'alive', newHouseName: '', newHouseColor: 'black', newHouseCustomColor: '' });
@@ -447,7 +447,7 @@ export default function App() {
         setFormData({ name: '', title: '', house: activeTab, isKing: false, isBastard: false, isNonCanon: false, isDragonRider: false, dragonName: '', isGap: false, imageUrl: '', birthYear: '', deathYear: '', lore: '', status: 'alive', newHouseName: '', newHouseColor: 'black', newHouseCustomColor: '' });
     }
     setActiveMenu(null);
-  };
+  }, [activeTab, characters, activeMenu]);
 
   return (
     <div className="flex flex-col h-screen w-full bg-[#0a0a0a] text-gray-200 overflow-hidden font-sans select-none relative">
@@ -505,23 +505,29 @@ export default function App() {
                 </div>
            )}
 
-           {characters.map((char) => (
-             <CharacterNode
-                key={char.id}
-                char={char}
-                activeTab={activeTab}
-                theme={theme}
-                themeConfig={themeConfig}
-                draggingNode={draggingNode}
-                activeMenu={activeMenu}
-                datasets={datasets}
-                onNodeDragStart={handleNodeDragStart}
-                setActiveMenu={setActiveMenu}
-                onOpenModal={openModalWrapper as any} // Typescript hint
-                onDelete={deleteCharacter}
-                onNavigate={navigateToCharacterHouse}
-             />
-           ))}
+           {characters.map((char) => {
+             const targetHouseName = (char.house && char.house !== activeTab && datasets[char.house])
+                ? datasets[char.house].theme.name
+                : null;
+
+             return (
+                 <CharacterNode
+                    key={char.id}
+                    char={char}
+                    activeTab={activeTab}
+                    theme={theme}
+                    themeConfig={themeConfig}
+                    draggingNode={draggingNode}
+                    activeMenu={activeMenu}
+                    targetHouseName={targetHouseName}
+                    onNodeDragStart={handleNodeDragStart}
+                    setActiveMenu={setActiveMenu}
+                    onOpenModal={openModalWrapper as any}
+                    onDelete={deleteCharacter}
+                    onNavigate={navigateToCharacterHouse}
+                 />
+             );
+           })}
         </div>
       </div>
 

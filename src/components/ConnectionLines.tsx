@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Character, Connection } from '../types';
 import { CARD_WIDTH, CARD_HEIGHT, X_SPACING, Y_SPACING } from '../constants/config';
 
@@ -63,4 +63,4 @@ const ConnectionLines: React.FC<ConnectionLinesProps> = ({ characters, connectio
   );
 };
 
-export default ConnectionLines;
+export default memo(ConnectionLines);
