@@ -31,68 +31,74 @@ const TimelineControls: React.FC<TimelineControlsProps> = ({
   const sliderValue = currentYear ?? maxYear;
 
   return (
-    <div className={`bg-zinc-900/90 border border-zinc-700 rounded-xl p-4 flex flex-col gap-4 shadow-2xl backdrop-blur-md w-64 ${className}`}>
+    <div className={`bg-zinc-900/90 border border-zinc-700 rounded-xl py-4 px-2 flex flex-col items-center gap-4 shadow-2xl backdrop-blur-md w-16 ${className}`}>
 
-      {/* Timeline Slider Section */}
-      <div className="flex flex-col gap-2">
-        <div className="flex justify-between text-[10px] text-zinc-500 font-mono uppercase tracking-wider">
-          <span>{formatYear(minYear)}</span>
-          <span className={currentYear !== null ? 'text-white font-bold' : ''}>
-            {currentYear !== null ? formatYear(currentYear) : 'Todos'}
-          </span>
-          <span>{formatYear(maxYear)}</span>
-        </div>
-        <input
-          type="range"
-          min={minYear}
-          max={maxYear}
-          value={sliderValue}
-          onChange={(e) => onYearChange(parseInt(e.target.value, 10))}
-          className="w-full h-1.5 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-white hover:accent-zinc-300 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all"
-        />
+      {/* Filters Section (Icons Only) */}
+      <div className="flex flex-col gap-2 w-full">
+        <button
+          onClick={onToggleDragonRiders}
+          className={`w-full aspect-square rounded-lg flex items-center justify-center transition-all border ${
+            showDragonRiders
+              ? 'bg-orange-900/40 text-orange-200 border-orange-700/50'
+              : 'bg-zinc-800/50 text-zinc-400 border-zinc-700 hover:bg-zinc-800 hover:text-zinc-200'
+          }`}
+          title="Ver solo Jinetes de Dragón"
+        >
+          <Flame size={18} className={showDragonRiders ? 'text-orange-500' : 'text-zinc-500'} />
+        </button>
+
+        <button
+          onClick={onToggleKings}
+          className={`w-full aspect-square rounded-lg flex items-center justify-center transition-all border ${
+            showKings
+              ? 'bg-yellow-900/40 text-yellow-200 border-yellow-700/50'
+              : 'bg-zinc-800/50 text-zinc-400 border-zinc-700 hover:bg-zinc-800 hover:text-zinc-200'
+          }`}
+          title="Ver solo Reyes"
+        >
+          <Crown size={18} className={showKings ? 'text-yellow-500' : 'text-zinc-500'} />
+        </button>
       </div>
 
-      <div className="h-px bg-zinc-800 w-full" />
+      <div className="w-full h-px bg-zinc-800" />
 
-      {/* Filters Section */}
-      <div className="flex flex-col gap-2">
-        <div className="flex gap-2">
-            <button
-            onClick={onToggleDragonRiders}
-            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-cinzel transition-all border ${
-                showDragonRiders
-                ? 'bg-orange-900/40 text-orange-200 border-orange-700/50'
-                : 'bg-zinc-800/50 text-zinc-400 border-zinc-700 hover:bg-zinc-800 hover:text-zinc-200'
-            }`}
-            title="Ver solo Jinetes de Dragón"
-            >
-            <Flame size={14} className={showDragonRiders ? 'text-orange-500' : 'text-zinc-500'} />
-            <span>Jinetes</span>
-            </button>
+      {/* Vertical Slider Section */}
+      <div className="flex-1 flex flex-col items-center gap-2 h-64 w-full relative py-2">
+        <div className="text-[10px] text-zinc-500 font-mono">{formatYear(maxYear)}</div>
 
-            <button
-            onClick={onToggleKings}
-            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-cinzel transition-all border ${
-                showKings
-                ? 'bg-yellow-900/40 text-yellow-200 border-yellow-700/50'
-                : 'bg-zinc-800/50 text-zinc-400 border-zinc-700 hover:bg-zinc-800 hover:text-zinc-200'
-            }`}
-            title="Ver solo Reyes"
-            >
-            <Crown size={14} className={showKings ? 'text-yellow-500' : 'text-zinc-500'} />
-            <span>Reyes</span>
-            </button>
+        {/* Slider Container */}
+        <div className="relative flex-1 w-full flex items-center justify-center">
+             {/* We use a transformed horizontal input to behave vertically */}
+             <input
+              type="range"
+              min={minYear}
+              max={maxYear}
+              value={sliderValue}
+              onChange={(e) => onYearChange(parseInt(e.target.value, 10))}
+              className="absolute w-48 h-1.5 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-white hover:accent-zinc-300 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all -rotate-90 origin-center"
+              style={{ width: '160px' }} // Width becomes height when rotated
+            />
         </div>
+
+        <div className="text-[10px] text-zinc-500 font-mono">{formatYear(minYear)}</div>
       </div>
 
-      {/* Reset Button */}
-      <button
-        onClick={onReset}
-        className="w-full py-2 bg-zinc-800/50 hover:bg-zinc-800 text-zinc-400 hover:text-white rounded-lg text-xs flex items-center justify-center gap-2 transition-colors border border-zinc-700"
-        title="Restablecer filtros"
-      >
-        <RotateCcw size={12} /> Restablecer Filtros
-      </button>
+      <div className="w-full h-px bg-zinc-800" />
+
+      {/* Current Year & Reset */}
+      <div className="flex flex-col items-center gap-2 w-full">
+        <div className={`text-[10px] font-bold font-mono text-center ${currentYear !== null ? 'text-white' : 'text-zinc-500'}`}>
+            {currentYear !== null ? formatYear(currentYear) : 'TODOS'}
+        </div>
+
+        <button
+          onClick={onReset}
+          className="p-2 hover:bg-zinc-800 rounded-full text-zinc-400 hover:text-white transition-colors"
+          title="Restablecer filtros"
+        >
+          <RotateCcw size={16} />
+        </button>
+      </div>
     </div>
   );
 };
