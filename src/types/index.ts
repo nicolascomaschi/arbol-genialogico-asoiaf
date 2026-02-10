@@ -46,6 +46,7 @@ export type HouseData = {
     name: string;
     config: ThemeConfig;
     sigilUrl?: string;
+    sigilDescription?: string;
     motto?: string;
     customColor?: string;
     seat?: string;

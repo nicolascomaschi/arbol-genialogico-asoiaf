@@ -123,25 +123,30 @@ export default function App() {
   
   const [isLinkingExisting, setIsLinkingExisting] = useState(false);
   const [linkCharId, setLinkCharId] = useState<string>('');
-  const [newHouseForm, setNewHouseForm] = useState({ 
+  const [newHouseForm, setNewHouseForm] = useState<{
+    name: string; color: string; customColor: string; founder: string;
+    sigilUrl: string; sigilDescription?: string; motto: string; isExtinct: boolean; seat: string; history: string;
+  }>({
     name: '', color: 'red', customColor: '', founder: 'Fundador', 
-    sigilUrl: '', motto: '', isExtinct: false, seat: '', history: '' 
+    sigilUrl: '', sigilDescription: '', motto: '', isExtinct: false, seat: '', history: ''
   });
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
 
   // AUTH
   useEffect(() => {
     if (!auth) return;
-    const initAuth = async () => {
-      const token = (window as any).__initial_auth_token;
-      if (token) {
-        await signInWithCustomToken(auth, token);
-      } else {
-        await signInAnonymously(auth);
-      }
-    };
-    initAuth();
-    const unsubscribe = onAuthStateChanged(auth, setUser);
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+        if (u) {
+            setUser(u);
+        } else {
+            const token = (window as any).__initial_auth_token;
+            if (token) {
+                signInWithCustomToken(auth, token).catch(console.error);
+            } else {
+                signInAnonymously(auth).catch(console.error);
+            }
+        }
+    });
     return () => unsubscribe();
   }, []);
 
@@ -338,13 +343,22 @@ export default function App() {
       connections: [],
       rootId: `founder_${Date.now()}`,
       isExtinct: newHouseForm.isExtinct,
-      theme: { name: newHouseForm.name, config: themeConfig, sigilUrl: newHouseForm.sigilUrl, motto: newHouseForm.motto, customColor: newHouseForm.customColor, seat: newHouseForm.seat, history: newHouseForm.history }
+      theme: {
+          name: newHouseForm.name,
+          config: themeConfig,
+          sigilUrl: newHouseForm.sigilUrl,
+          sigilDescription: newHouseForm.sigilDescription,
+          motto: newHouseForm.motto,
+          customColor: newHouseForm.customColor,
+          seat: newHouseForm.seat,
+          history: newHouseForm.history
+      }
     };
     setDatasets(prev => ({ ...prev, [houseId]: newHouse }));
     saveHouseToDb(newHouse);
     setActiveTab(houseId);
     setModalMode(null);
-    setNewHouseForm({ name: '', color: 'red', customColor: '', founder: 'Fundador', sigilUrl: '', motto: '', isExtinct: false, seat: '', history: '' });
+    setNewHouseForm({ name: '', color: 'red', customColor: '', founder: 'Fundador', sigilUrl: '', sigilDescription: '', motto: '', isExtinct: false, seat: '', history: '' });
   };
 
   const handleEditHouseSubmit = (e: React.FormEvent) => {
@@ -352,7 +366,17 @@ export default function App() {
       const themeConfig = COLOR_THEMES[newHouseForm.color] || COLOR_THEMES.black;
       setDatasets(prev => {
           const house = prev[activeTab];
-          const updatedTheme = { ...prev[activeTab].theme, name: newHouseForm.name, config: themeConfig, sigilUrl: newHouseForm.sigilUrl, motto: newHouseForm.motto, customColor: newHouseForm.customColor, seat: newHouseForm.seat, history: newHouseForm.history };
+          const updatedTheme = {
+              ...prev[activeTab].theme,
+              name: newHouseForm.name,
+              config: themeConfig,
+              sigilUrl: newHouseForm.sigilUrl,
+              sigilDescription: newHouseForm.sigilDescription,
+              motto: newHouseForm.motto,
+              customColor: newHouseForm.customColor,
+              seat: newHouseForm.seat,
+              history: newHouseForm.history
+          };
           let updatedCharacters = house.characters;
           if (house.rootId) { updatedCharacters = house.characters.map(c => c.id === house.rootId ? { ...c, name: newHouseForm.founder } : c); }
           const updatedHouse = { ...house, isExtinct: newHouseForm.isExtinct, characters: updatedCharacters, theme: updatedTheme };
@@ -576,7 +600,18 @@ export default function App() {
             const colorKey = Object.keys(COLOR_THEMES).find(k => COLOR_THEMES[k].accentColor === themeConfig.accentColor) || 'black';
             let founderName = '';
             if (currentData.rootId) { const root = characters.find(c => c.id === currentData.rootId); if(root) founderName = root.name; }
-            setNewHouseForm({ name: theme.name, color: colorKey, customColor: theme.customColor || '', founder: founderName, sigilUrl: theme.sigilUrl || '', motto: theme.motto || '', isExtinct: !!currentData.isExtinct, seat: theme.seat || '', history: theme.history || '' });
+            setNewHouseForm({
+                name: theme.name,
+                color: colorKey,
+                customColor: theme.customColor || '',
+                founder: founderName,
+                sigilUrl: theme.sigilUrl || '',
+                sigilDescription: theme.sigilDescription || '',
+                motto: theme.motto || '',
+                isExtinct: !!currentData.isExtinct,
+                seat: theme.seat || '',
+                history: theme.history || ''
+            });
             setModalMode('edit-house');
         }}
         isExtinct={!!currentData.isExtinct}
