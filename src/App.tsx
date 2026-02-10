@@ -12,9 +12,11 @@ import {
 } from './constants/config';
 import { useUndoRedo } from './hooks/useUndoRedo';
 import { calculateAutoLayout } from './utils/layout';
+import { parseYear } from './utils/date';
 
 import ConnectionLines from './components/ConnectionLines';
 import CharacterNode from './components/CharacterNode';
+import TimelineControls from './components/TimelineControls';
 import Header from './components/Header';
 import LegendModal from './components/LegendModal';
 import HouseModal from './components/HouseModal';
@@ -54,6 +56,11 @@ export default function App() {
   const [alertInfo, setAlertInfo] = useState<{title: string, message: string} | null>(null);
   const [isHouseMenuOpen, setIsHouseMenuOpen] = useState(false);
 
+  // Timeline & Filters
+  const [timelineYear, setTimelineYear] = useState<number | null>(null);
+  const [showDragonRiders, setShowDragonRiders] = useState(false);
+  const [showKings, setShowKings] = useState(false);
+
   // Fallback Logic
   const currentData = datasets[activeTab] || INITIAL_DATASETS.targaryen;
   
@@ -66,6 +73,32 @@ export default function App() {
   const characters = currentData.characters;
   const connections = currentData.connections;
   const themeConfig = useMemo(() => theme.config || COLOR_THEMES.black, [theme.config]);
+
+  const timelineBounds = useMemo(() => {
+    const years = characters.flatMap(c => [
+        parseYear(c.birthYear),
+        parseYear(c.deathYear)
+    ]).filter((y): y is number => y !== null);
+
+    if (years.length === 0) return { min: -100, max: 300 };
+    return {
+        min: Math.min(...years) - 10,
+        max: Math.max(...years) + 10
+    };
+  }, [characters]);
+
+  const isNodeDimmed = useCallback((char: Character) => {
+    if (showDragonRiders && !char.isDragonRider) return true;
+    if (showKings && !char.isKing) return true;
+
+    if (timelineYear !== null) {
+        const birth = parseYear(char.birthYear);
+        const death = parseYear(char.deathYear);
+        if (birth !== null && birth > timelineYear) return true;
+        if (death !== null && death < timelineYear) return true;
+    }
+    return false;
+  }, [showDragonRiders, showKings, timelineYear]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.8);
@@ -616,11 +649,24 @@ export default function App() {
                     onOpenModal={openModalWrapper as any}
                     onDelete={deleteCharacter}
                     onNavigate={navigateToCharacterHouse}
+                    isDimmed={isNodeDimmed(char)}
                  />
              );
            })}
         </div>
       </div>
+
+      <TimelineControls
+        minYear={timelineBounds.min}
+        maxYear={timelineBounds.max}
+        currentYear={timelineYear}
+        onYearChange={setTimelineYear}
+        showDragonRiders={showDragonRiders}
+        onToggleDragonRiders={() => setShowDragonRiders(prev => !prev)}
+        showKings={showKings}
+        onToggleKings={() => setShowKings(prev => !prev)}
+        onReset={() => { setTimelineYear(null); setShowDragonRiders(false); setShowKings(false); }}
+      />
 
       <LegendModal
         isOpen={showLegend}

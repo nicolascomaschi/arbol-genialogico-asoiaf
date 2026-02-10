@@ -24,6 +24,7 @@ interface CharacterNodeProps {
   onOpenModal: (mode: 'add-child' | 'add-parent' | 'add-partner' | 'edit', id: string) => void;
   onDelete: (id: string) => void;
   onNavigate: (char: Character) => void;
+  isDimmed?: boolean;
 }
 
 const CharacterNode: React.FC<CharacterNodeProps> = ({
@@ -38,16 +39,18 @@ const CharacterNode: React.FC<CharacterNodeProps> = ({
   setActiveMenu,
   onOpenModal,
   onDelete,
-  onNavigate
+  onNavigate,
+  isDimmed
 }) => {
   return (
     <div
       className={`absolute rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.8)] group transition-all duration-300
+          ${isDimmed ? 'opacity-20 grayscale pointer-events-none' : ''}
           ${char.isGap ? 'w-[60px] h-[60px] rounded-full border-dashed border-2 border-zinc-600 bg-black/50 flex items-center justify-center' : ''}
           ${!char.isGap ? 'border border-zinc-700 bg-zinc-900 overflow-visible' : ''}
-          ${char.house === activeTab ? (theme.customColor ? '' : themeConfig.borderColor) : 'border-zinc-700 opacity-80 hover:opacity-100'}
-          ${char.isKing && char.house === activeTab && !theme.customColor ? themeConfig.glowColor : ''}
-          ${activeMenu === char.id ? 'z-[60]' : (draggingNode === char.id ? 'z-[100] scale-105 ring-2 ring-white/20 cursor-grabbing' : 'z-10 hover:z-50 hover:scale-[1.02] cursor-grab')}
+          ${!isDimmed && char.house === activeTab ? (theme.customColor ? '' : themeConfig.borderColor) : (!isDimmed ? 'border-zinc-700 opacity-80 hover:opacity-100' : 'border-zinc-800')}
+          ${!isDimmed && char.isKing && char.house === activeTab && !theme.customColor ? themeConfig.glowColor : ''}
+          ${activeMenu === char.id ? 'z-[60]' : (draggingNode === char.id ? 'z-[100] scale-105 ring-2 ring-white/20 cursor-grabbing' : (isDimmed ? 'z-0' : 'z-10 hover:z-50 hover:scale-[1.02] cursor-grab'))}
       `}
       style={{
           left: char.x * X_SPACING, top: char.generation * Y_SPACING,
