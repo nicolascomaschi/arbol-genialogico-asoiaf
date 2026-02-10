@@ -618,7 +618,7 @@ export default function App() {
       />
 
       {/* FIXED BOTTOM LEFT BUTTONS */}
-      <div className="fixed bottom-6 left-6 z-50 flex flex-col gap-2">
+      <div className="fixed bottom-6 left-6 z-50 flex flex-col gap-2 w-16">
            <TimelineControls
                 minYear={timelineBounds.min}
                 maxYear={timelineBounds.max}
@@ -632,29 +632,29 @@ export default function App() {
                 className="mb-2"
            />
 
-           <div className="flex gap-2 w-64">
+           <div className="flex gap-2 w-full">
              <button
                 onClick={undo}
                 disabled={!canUndo}
-                className={`flex-1 bg-zinc-900/90 hover:bg-zinc-800 px-3 py-2.5 rounded-lg text-xs border border-zinc-700 flex items-center justify-center gap-2 text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105 ${!canUndo ? 'opacity-50 cursor-not-allowed hover:scale-100' : ''}`}
+                className={`flex-1 bg-zinc-900/90 hover:bg-zinc-800 h-8 rounded-lg text-xs border border-zinc-700 flex items-center justify-center text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105 ${!canUndo ? 'opacity-50 cursor-not-allowed hover:scale-100' : ''}`}
                 title="Deshacer (Ctrl+Z)"
              >
-                <RotateCcw size={16}/>
+                <RotateCcw size={14}/>
              </button>
              <button
                 onClick={redo}
                 disabled={!canRedo}
-                className={`flex-1 bg-zinc-900/90 hover:bg-zinc-800 px-3 py-2.5 rounded-lg text-xs border border-zinc-700 flex items-center justify-center gap-2 text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105 ${!canRedo ? 'opacity-50 cursor-not-allowed hover:scale-100' : ''}`}
+                className={`flex-1 bg-zinc-900/90 hover:bg-zinc-800 h-8 rounded-lg text-xs border border-zinc-700 flex items-center justify-center text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105 ${!canRedo ? 'opacity-50 cursor-not-allowed hover:scale-100' : ''}`}
                 title="Rehacer (Ctrl+Y)"
              >
-                <RotateCw size={16}/>
+                <RotateCw size={14}/>
              </button>
            </div>
 
-           <button onClick={handleAutoLayout} className="w-64 bg-zinc-900/90 hover:bg-zinc-800 px-4 py-2.5 rounded-lg text-xs border border-zinc-700 flex items-center justify-center gap-2 text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105"><Wand2 size={16}/> Auto-Layout</button>
+           <button onClick={handleAutoLayout} title="Auto-Layout" className="w-full bg-zinc-900/90 hover:bg-zinc-800 h-10 rounded-lg text-xs border border-zinc-700 flex items-center justify-center text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105"><Wand2 size={18}/></button>
 
-           <button onClick={() => setShowLegend(true)} className="w-64 bg-zinc-900/90 hover:bg-zinc-800 px-4 py-2.5 rounded-lg text-xs border border-zinc-700 flex items-center justify-center gap-2 text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105"><HelpCircle size={16}/> Leyenda</button>
-           <button onClick={() => centerView()} className="w-64 bg-zinc-900/90 hover:bg-zinc-800 px-4 py-2.5 rounded-lg text-xs border border-zinc-700 flex items-center justify-center gap-2 text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105"><Move size={16}/> Centrar</button>
+           <button onClick={() => setShowLegend(true)} title="Leyenda" className="w-full bg-zinc-900/90 hover:bg-zinc-800 h-10 rounded-lg text-xs border border-zinc-700 flex items-center justify-center text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105"><HelpCircle size={18}/></button>
+           <button onClick={() => centerView()} title="Centrar Vista" className="w-full bg-zinc-900/90 hover:bg-zinc-800 h-10 rounded-lg text-xs border border-zinc-700 flex items-center justify-center text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105"><Move size={18}/></button>
       </div>
 
       {/* CANVAS */}
