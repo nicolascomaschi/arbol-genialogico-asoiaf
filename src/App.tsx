@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { HelpCircle, Move } from 'lucide-react';
+import { HelpCircle, Move, RotateCcw, RotateCw } from 'lucide-react';
 import { signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
 import { collection, doc, setDoc, onSnapshot } from 'firebase/firestore';
 
@@ -10,6 +10,7 @@ import { INITIAL_DATASETS } from './data/initialData';
 import {
   CARD_WIDTH, X_SPACING, Y_SPACING, CANVAS_SIZE, APP_ID
 } from './constants/config';
+import { useUndoRedo } from './hooks/useUndoRedo';
 
 import ConnectionLines from './components/ConnectionLines';
 import CharacterNode from './components/CharacterNode';
@@ -23,7 +24,18 @@ import Modal from './components/Modal';
 
 export default function App() {
   const [user, setUser] = useState<any>(null);
-  const [datasets, setDatasets] = useState<Record<string, HouseData>>(INITIAL_DATASETS);
+
+  // Undo/Redo Hook
+  const {
+    state: datasets,
+    set: setDatasets,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    reset: resetDatasets
+  } = useUndoRedo<Record<string, HouseData>>(INITIAL_DATASETS);
+
   const [activeTab, setActiveTab] = useState<string>('targaryen');
   const [focusTarget, setFocusTarget] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -102,11 +114,32 @@ export default function App() {
         snapshot.forEach(doc => {
           loadedDatasets[doc.id] = doc.data() as HouseData;
         });
-        setDatasets(prev => ({ ...prev, ...loadedDatasets }));
+        resetDatasets({ ...datasets, ...loadedDatasets });
       }
     });
     return () => unsubscribe();
-  }, [user]);
+  }, [user, resetDatasets]);
+
+  // Keyboard Shortcuts for Undo/Redo
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        if (e.shiftKey) {
+          if (canRedo) redo();
+        } else {
+          if (canUndo) undo();
+        }
+        e.preventDefault();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+        if (canRedo) redo();
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [canUndo, canRedo, undo, redo]);
+
 
   const saveHouseToDb = async (house: HouseData) => {
     if (!user || !db) return;
@@ -196,7 +229,7 @@ export default function App() {
     } else if (isPanning) {
       setPosition({ x: e.clientX - panStart.x, y: e.clientY - panStart.y });
     }
-  }, [draggingNode, isPanning, panStart, scale, activeTab]);
+  }, [draggingNode, isPanning, panStart, scale, activeTab, setDatasets]);
 
   const handleMouseUp = () => {
     if (draggingNode && datasets[activeTab]) saveHouseToDb(datasets[activeTab]);
@@ -481,6 +514,24 @@ export default function App() {
 
       {/* FIXED BOTTOM LEFT BUTTONS */}
       <div className="fixed bottom-6 left-6 z-50 flex flex-col gap-2">
+           <div className="flex gap-2">
+             <button
+                onClick={undo}
+                disabled={!canUndo}
+                className={`bg-zinc-900/90 hover:bg-zinc-800 px-3 py-2.5 rounded-lg text-xs border border-zinc-700 flex items-center gap-2 text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105 ${!canUndo ? 'opacity-50 cursor-not-allowed hover:scale-100' : ''}`}
+                title="Deshacer (Ctrl+Z)"
+             >
+                <RotateCcw size={16}/>
+             </button>
+             <button
+                onClick={redo}
+                disabled={!canRedo}
+                className={`bg-zinc-900/90 hover:bg-zinc-800 px-3 py-2.5 rounded-lg text-xs border border-zinc-700 flex items-center gap-2 text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105 ${!canRedo ? 'opacity-50 cursor-not-allowed hover:scale-100' : ''}`}
+                title="Rehacer (Ctrl+Y)"
+             >
+                <RotateCw size={16}/>
+             </button>
+           </div>
            <button onClick={() => setShowLegend(true)} className="bg-zinc-900/90 hover:bg-zinc-800 px-4 py-2.5 rounded-lg text-xs border border-zinc-700 flex items-center gap-2 text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105"><HelpCircle size={16}/> Leyenda</button>
            <button onClick={() => centerView()} className="bg-zinc-900/90 hover:bg-zinc-800 px-4 py-2.5 rounded-lg text-xs border border-zinc-700 flex items-center gap-2 text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105"><Move size={16}/> Centrar</button>
       </div>
