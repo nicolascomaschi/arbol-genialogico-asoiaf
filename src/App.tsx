@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { HelpCircle, Move } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { HelpCircle, Move, RotateCcw, RotateCw, Wand2 } from 'lucide-react';
 import { signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
 import { collection, doc, setDoc, onSnapshot } from 'firebase/firestore';
 
@@ -10,6 +10,8 @@ import { INITIAL_DATASETS } from './data/initialData';
 import {
   CARD_WIDTH, X_SPACING, Y_SPACING, CANVAS_SIZE, APP_ID
 } from './constants/config';
+import { useUndoRedo } from './hooks/useUndoRedo';
+import { calculateAutoLayout } from './utils/layout';
 
 import ConnectionLines from './components/ConnectionLines';
 import CharacterNode from './components/CharacterNode';
@@ -23,7 +25,24 @@ import Modal from './components/Modal';
 
 export default function App() {
   const [user, setUser] = useState<any>(null);
-  const [datasets, setDatasets] = useState<Record<string, HouseData>>(INITIAL_DATASETS);
+
+  // Undo/Redo Hook
+  const {
+    state: datasets,
+    set: setDatasets,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    reset: resetDatasets
+  } = useUndoRedo<Record<string, HouseData>>(INITIAL_DATASETS);
+
+  // Keep a ref of datasets to avoid stale closures in snapshot listeners
+  const datasetsRef = useRef(datasets);
+  useEffect(() => {
+    datasetsRef.current = datasets;
+  }, [datasets]);
+
   const [activeTab, setActiveTab] = useState<string>('targaryen');
   const [focusTarget, setFocusTarget] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -38,15 +57,15 @@ export default function App() {
   // Fallback Logic
   const currentData = datasets[activeTab] || INITIAL_DATASETS.targaryen;
   
-  const theme = {
+  const theme = useMemo(() => ({
       ...currentData.theme,
       seat: currentData.theme.seat || (INITIAL_DATASETS[activeTab] ? INITIAL_DATASETS[activeTab]?.theme?.seat : ''),
       history: currentData.theme.history || (INITIAL_DATASETS[activeTab] ? INITIAL_DATASETS[activeTab]?.theme?.history : '')
-  };
+  }), [currentData.theme, activeTab]);
 
   const characters = currentData.characters;
   const connections = currentData.connections;
-  const themeConfig = theme.config || COLOR_THEMES.black;
+  const themeConfig = useMemo(() => theme.config || COLOR_THEMES.black, [theme.config]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.8);
@@ -54,6 +73,7 @@ export default function App() {
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [draggingNode, setDraggingNode] = useState<string | null>(null);
+  const isFirstDragMove = useRef(false);
 
   const [modalMode, setModalMode] = useState<'add-child' | 'add-parent' | 'add-partner' | 'edit' | 'create-house' | 'edit-house' | 'add-root' | null>(null);
   const [selectedCharId, setSelectedCharId] = useState<string | null>(null);
@@ -97,16 +117,46 @@ export default function App() {
     if (!user || !db) return;
     const housesRef = collection(db, 'artifacts', APP_ID, 'users', user.uid, 'houses');
     const unsubscribe = onSnapshot(housesRef, (snapshot) => {
+      // Ignore local writes (latency compensation) to preserve undo history
+      if (snapshot.metadata.hasPendingWrites) return;
+
       if (!snapshot.empty) {
         const loadedDatasets: Record<string, HouseData> = {};
         snapshot.forEach(doc => {
           loadedDatasets[doc.id] = doc.data() as HouseData;
         });
-        setDatasets(prev => ({ ...prev, ...loadedDatasets }));
+
+        // Only update if data has actually changed to avoid clearing undo history unnecessarily
+        // This handles the case where the server confirms our own write (which we already have)
+        const merged = { ...datasetsRef.current, ...loadedDatasets };
+        if (JSON.stringify(merged) !== JSON.stringify(datasetsRef.current)) {
+            resetDatasets(merged);
+        }
       }
     });
     return () => unsubscribe();
-  }, [user]);
+  }, [user, resetDatasets]);
+
+  // Keyboard Shortcuts for Undo/Redo
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        if (e.shiftKey) {
+          if (canRedo) redo();
+        } else {
+          if (canUndo) undo();
+        }
+        e.preventDefault();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+        if (canRedo) redo();
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [canUndo, canRedo, undo, redo]);
+
 
   const saveHouseToDb = async (house: HouseData) => {
     if (!user || !db) return;
@@ -127,6 +177,19 @@ export default function App() {
     );
   }, [datasets]);
 
+  const handleAutoLayout = () => {
+    setDatasets(prev => {
+      const currentHouse = prev[activeTab];
+      if (!currentHouse) return prev;
+
+      const newCharacters = calculateAutoLayout(currentHouse.characters, currentHouse.connections);
+      const updatedHouse = { ...currentHouse, characters: newCharacters };
+      saveHouseToDb(updatedHouse);
+
+      return { ...prev, [activeTab]: updatedHouse };
+    });
+  };
+
   useEffect(() => {
     if (searchQuery.trim() === '') {
         setSearchResults([]);
@@ -140,7 +203,7 @@ export default function App() {
     setSearchResults(results);
   }, [searchQuery, getAllCharacters]);
 
-  const navigateToCharacterHouse = (char: Character) => {
+  const navigateToCharacterHouse = useCallback((char: Character) => {
     if (!datasets[char.house || '']) {
         setAlertInfo({ title: "Casa no disponible", message: "Esta casa no tiene su propia pestaña activa." });
         return;
@@ -148,7 +211,7 @@ export default function App() {
     setActiveTab(char.house!);
     setFocusTarget(char.id);
     setSearchQuery(''); setIsSearchOpen(false);
-  };
+  }, [datasets]);
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
     if (!containerRef.current) return;
@@ -165,12 +228,13 @@ export default function App() {
     setPosition({ x: newX, y: newY });
   }, [scale, position]);
 
-  const handleNodeDragStart = (e: React.MouseEvent, charId: string) => {
+  const handleNodeDragStart = useCallback((e: React.MouseEvent, charId: string) => {
     const target = e.target as HTMLElement;
     if (target.closest('button') || target.closest('a') || target.closest('.no-drag')) return;
     e.stopPropagation(); e.preventDefault();
     setDraggingNode(charId); setActiveMenu(null);
-  };
+    isFirstDragMove.current = true;
+  }, []);
 
   const handleCanvasMouseDown = (e: React.MouseEvent) => {
     setIsPanning(true);
@@ -182,6 +246,10 @@ export default function App() {
     if (draggingNode) {
       const deltaX = e.movementX / scale;
       const deltaY = e.movementY / scale;
+
+      // Use replace: true for subsequent moves to avoid filling history with intermediate states
+      const shouldReplace = !isFirstDragMove.current;
+
       setDatasets(prev => {
         const house = prev[activeTab];
         if(!house) return prev;
@@ -192,18 +260,20 @@ export default function App() {
           return c;
         });
         return { ...prev, [activeTab]: { ...house, characters: newChars } };
-      });
+      }, { replace: shouldReplace });
+
+      isFirstDragMove.current = false;
     } else if (isPanning) {
       setPosition({ x: e.clientX - panStart.x, y: e.clientY - panStart.y });
     }
-  }, [draggingNode, isPanning, panStart, scale, activeTab]);
+  }, [draggingNode, isPanning, panStart, scale, activeTab, setDatasets]);
 
   const handleMouseUp = () => {
     if (draggingNode && datasets[activeTab]) saveHouseToDb(datasets[activeTab]);
     setIsPanning(false); setDraggingNode(null);
   };
 
-  const deleteCharacter = (id: string) => { setDeleteTargetId(id); setActiveMenu(null); };
+  const deleteCharacter = useCallback((id: string) => { setDeleteTargetId(id); setActiveMenu(null); }, []);
 
   const executeDeleteCharacter = () => {
     if (!deleteTargetId) return;
@@ -429,7 +499,7 @@ export default function App() {
     if (focusTarget) { centerView(focusTarget); setFocusTarget(null); } else { centerView(); }
   }, [activeTab]);
 
-  const openModalWrapper = (mode: typeof modalMode, charId: string) => {
+  const openModalWrapper = useCallback((mode: typeof modalMode, charId: string) => {
     setModalMode(mode); setSelectedCharId(charId); setIsLinkingExisting(false); setLinkCharId('');
     if (mode === 'add-root') {
          setFormData({ name: '', title: '', house: activeTab, isKing: false, isBastard: false, isNonCanon: false, isDragonRider: false, dragonName: '', isGap: false, imageUrl: '', birthYear: '', deathYear: '', lore: '', status: 'alive', newHouseName: '', newHouseColor: 'black', newHouseCustomColor: '' });
@@ -447,7 +517,7 @@ export default function App() {
         setFormData({ name: '', title: '', house: activeTab, isKing: false, isBastard: false, isNonCanon: false, isDragonRider: false, dragonName: '', isGap: false, imageUrl: '', birthYear: '', deathYear: '', lore: '', status: 'alive', newHouseName: '', newHouseColor: 'black', newHouseCustomColor: '' });
     }
     setActiveMenu(null);
-  };
+  }, [activeTab, characters, activeMenu]);
 
   return (
     <div className="flex flex-col h-screen w-full bg-[#0a0a0a] text-gray-200 overflow-hidden font-sans select-none relative">
@@ -481,6 +551,27 @@ export default function App() {
 
       {/* FIXED BOTTOM LEFT BUTTONS */}
       <div className="fixed bottom-6 left-6 z-50 flex flex-col gap-2">
+           <div className="flex gap-2">
+             <button
+                onClick={undo}
+                disabled={!canUndo}
+                className={`bg-zinc-900/90 hover:bg-zinc-800 px-3 py-2.5 rounded-lg text-xs border border-zinc-700 flex items-center gap-2 text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105 ${!canUndo ? 'opacity-50 cursor-not-allowed hover:scale-100' : ''}`}
+                title="Deshacer (Ctrl+Z)"
+             >
+                <RotateCcw size={16}/>
+             </button>
+             <button
+                onClick={redo}
+                disabled={!canRedo}
+                className={`bg-zinc-900/90 hover:bg-zinc-800 px-3 py-2.5 rounded-lg text-xs border border-zinc-700 flex items-center gap-2 text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105 ${!canRedo ? 'opacity-50 cursor-not-allowed hover:scale-100' : ''}`}
+                title="Rehacer (Ctrl+Y)"
+             >
+                <RotateCw size={16}/>
+             </button>
+           </div>
+
+           <button onClick={handleAutoLayout} className="bg-zinc-900/90 hover:bg-zinc-800 px-4 py-2.5 rounded-lg text-xs border border-zinc-700 flex items-center gap-2 text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105"><Wand2 size={16}/> Auto-Layout</button>
+
            <button onClick={() => setShowLegend(true)} className="bg-zinc-900/90 hover:bg-zinc-800 px-4 py-2.5 rounded-lg text-xs border border-zinc-700 flex items-center gap-2 text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105"><HelpCircle size={16}/> Leyenda</button>
            <button onClick={() => centerView()} className="bg-zinc-900/90 hover:bg-zinc-800 px-4 py-2.5 rounded-lg text-xs border border-zinc-700 flex items-center gap-2 text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105"><Move size={16}/> Centrar</button>
       </div>
@@ -505,23 +596,29 @@ export default function App() {
                 </div>
            )}
 
-           {characters.map((char) => (
-             <CharacterNode
-                key={char.id}
-                char={char}
-                activeTab={activeTab}
-                theme={theme}
-                themeConfig={themeConfig}
-                draggingNode={draggingNode}
-                activeMenu={activeMenu}
-                datasets={datasets}
-                onNodeDragStart={handleNodeDragStart}
-                setActiveMenu={setActiveMenu}
-                onOpenModal={openModalWrapper as any} // Typescript hint
-                onDelete={deleteCharacter}
-                onNavigate={navigateToCharacterHouse}
-             />
-           ))}
+           {characters.map((char) => {
+             const targetHouseName = (char.house && char.house !== activeTab && datasets[char.house])
+                ? datasets[char.house].theme.name
+                : null;
+
+             return (
+                 <CharacterNode
+                    key={char.id}
+                    char={char}
+                    activeTab={activeTab}
+                    theme={theme}
+                    themeConfig={themeConfig}
+                    draggingNode={draggingNode}
+                    activeMenu={activeMenu}
+                    targetHouseName={targetHouseName}
+                    onNodeDragStart={handleNodeDragStart}
+                    setActiveMenu={setActiveMenu}
+                    onOpenModal={openModalWrapper as any}
+                    onDelete={deleteCharacter}
+                    onNavigate={navigateToCharacterHouse}
+                 />
+             );
+           })}
         </div>
       </div>
 

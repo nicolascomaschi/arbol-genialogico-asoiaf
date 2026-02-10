@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { memo } from 'react';
 import {
   GitCommit, MoreVertical, User, Crown, Flame, Ban, AlertTriangle,
   Skull, HelpCircle, Ghost, BookOpen, LogOut, Edit2, Plus, UserPlus,
   HeartPulse, Trash2
 } from 'lucide-react';
-import { Character, ThemeConfig, HouseData } from '../types';
+import { Character, ThemeConfig } from '../types';
 import { GAP_NODE_SIZE, CARD_WIDTH, CARD_HEIGHT, X_SPACING, Y_SPACING } from '../constants/config';
 
 interface CharacterNodeProps {
@@ -18,7 +18,7 @@ interface CharacterNodeProps {
   themeConfig: ThemeConfig;
   draggingNode: string | null;
   activeMenu: string | null;
-  datasets: Record<string, HouseData>;
+  targetHouseName: string | null;
   onNodeDragStart: (e: React.MouseEvent, id: string) => void;
   setActiveMenu: (id: string | null) => void;
   onOpenModal: (mode: 'add-child' | 'add-parent' | 'add-partner' | 'edit', id: string) => void;
@@ -33,7 +33,7 @@ const CharacterNode: React.FC<CharacterNodeProps> = ({
   themeConfig,
   draggingNode,
   activeMenu,
-  datasets,
+  targetHouseName,
   onNodeDragStart,
   setActiveMenu,
   onOpenModal,
@@ -105,11 +105,11 @@ const CharacterNode: React.FC<CharacterNodeProps> = ({
               </div>
 
               {/* --- LINK A OTRA CASA (Top Right - Debajo de los 3 puntos) --- */}
-              {char.house && char.house !== activeTab && datasets[char.house] && (
+              {targetHouseName && (
                   <button
                       onClick={(e) => { e.stopPropagation(); onNavigate(char); }}
                       className="absolute top-10 right-2 z-30 p-1.5 bg-black/60 hover:bg-zinc-800 rounded-full text-zinc-400 border border-zinc-700/50 transition-colors pointer-events-auto no-drag"
-                      title={`Ver casa: ${datasets[char.house].theme.name}`}
+                      title={`Ver casa: ${targetHouseName}`}
                   >
                       <LogOut size={12} />
                   </button>
@@ -139,4 +139,4 @@ const CharacterNode: React.FC<CharacterNodeProps> = ({
   );
 };
 
-export default CharacterNode;
+export default memo(CharacterNode);
