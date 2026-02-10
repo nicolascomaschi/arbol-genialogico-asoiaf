@@ -619,11 +619,24 @@ export default function App() {
 
       {/* FIXED BOTTOM LEFT BUTTONS */}
       <div className="fixed bottom-6 left-6 z-50 flex flex-col gap-2">
-           <div className="flex gap-2">
+           <TimelineControls
+                minYear={timelineBounds.min}
+                maxYear={timelineBounds.max}
+                currentYear={timelineYear}
+                onYearChange={setTimelineYear}
+                showDragonRiders={showDragonRiders}
+                onToggleDragonRiders={() => setShowDragonRiders(prev => !prev)}
+                showKings={showKings}
+                onToggleKings={() => setShowKings(prev => !prev)}
+                onReset={() => { setTimelineYear(null); setShowDragonRiders(false); setShowKings(false); }}
+                className="mb-2"
+           />
+
+           <div className="flex gap-2 w-64">
              <button
                 onClick={undo}
                 disabled={!canUndo}
-                className={`bg-zinc-900/90 hover:bg-zinc-800 px-3 py-2.5 rounded-lg text-xs border border-zinc-700 flex items-center gap-2 text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105 ${!canUndo ? 'opacity-50 cursor-not-allowed hover:scale-100' : ''}`}
+                className={`flex-1 bg-zinc-900/90 hover:bg-zinc-800 px-3 py-2.5 rounded-lg text-xs border border-zinc-700 flex items-center justify-center gap-2 text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105 ${!canUndo ? 'opacity-50 cursor-not-allowed hover:scale-100' : ''}`}
                 title="Deshacer (Ctrl+Z)"
              >
                 <RotateCcw size={16}/>
@@ -631,17 +644,17 @@ export default function App() {
              <button
                 onClick={redo}
                 disabled={!canRedo}
-                className={`bg-zinc-900/90 hover:bg-zinc-800 px-3 py-2.5 rounded-lg text-xs border border-zinc-700 flex items-center gap-2 text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105 ${!canRedo ? 'opacity-50 cursor-not-allowed hover:scale-100' : ''}`}
+                className={`flex-1 bg-zinc-900/90 hover:bg-zinc-800 px-3 py-2.5 rounded-lg text-xs border border-zinc-700 flex items-center justify-center gap-2 text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105 ${!canRedo ? 'opacity-50 cursor-not-allowed hover:scale-100' : ''}`}
                 title="Rehacer (Ctrl+Y)"
              >
                 <RotateCw size={16}/>
              </button>
            </div>
 
-           <button onClick={handleAutoLayout} className="bg-zinc-900/90 hover:bg-zinc-800 px-4 py-2.5 rounded-lg text-xs border border-zinc-700 flex items-center gap-2 text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105"><Wand2 size={16}/> Auto-Layout</button>
+           <button onClick={handleAutoLayout} className="w-64 bg-zinc-900/90 hover:bg-zinc-800 px-4 py-2.5 rounded-lg text-xs border border-zinc-700 flex items-center justify-center gap-2 text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105"><Wand2 size={16}/> Auto-Layout</button>
 
-           <button onClick={() => setShowLegend(true)} className="bg-zinc-900/90 hover:bg-zinc-800 px-4 py-2.5 rounded-lg text-xs border border-zinc-700 flex items-center gap-2 text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105"><HelpCircle size={16}/> Leyenda</button>
-           <button onClick={() => centerView()} className="bg-zinc-900/90 hover:bg-zinc-800 px-4 py-2.5 rounded-lg text-xs border border-zinc-700 flex items-center gap-2 text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105"><Move size={16}/> Centrar</button>
+           <button onClick={() => setShowLegend(true)} className="w-64 bg-zinc-900/90 hover:bg-zinc-800 px-4 py-2.5 rounded-lg text-xs border border-zinc-700 flex items-center justify-center gap-2 text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105"><HelpCircle size={16}/> Leyenda</button>
+           <button onClick={() => centerView()} className="w-64 bg-zinc-900/90 hover:bg-zinc-800 px-4 py-2.5 rounded-lg text-xs border border-zinc-700 flex items-center justify-center gap-2 text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105"><Move size={16}/> Centrar</button>
       </div>
 
       {/* CANVAS */}
@@ -690,18 +703,6 @@ export default function App() {
            })}
         </div>
       </div>
-
-      <TimelineControls
-        minYear={timelineBounds.min}
-        maxYear={timelineBounds.max}
-        currentYear={timelineYear}
-        onYearChange={setTimelineYear}
-        showDragonRiders={showDragonRiders}
-        onToggleDragonRiders={() => setShowDragonRiders(prev => !prev)}
-        showKings={showKings}
-        onToggleKings={() => setShowKings(prev => !prev)}
-        onReset={() => { setTimelineYear(null); setShowDragonRiders(false); setShowKings(false); }}
-      />
 
       <LegendModal
         isOpen={showLegend}
