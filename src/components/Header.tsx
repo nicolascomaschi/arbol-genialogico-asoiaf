@@ -59,15 +59,17 @@ const Header: React.FC<HeaderProps> = ({
          <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-3 pointer-events-auto gap-4">
              <div className="flex items-center gap-6 group">
                  {/* SIGIL */}
-                 <div
-                   className={`w-14 h-14 rounded-2xl flex items-center justify-center bg-black/40 backdrop-blur-md border-2 shadow-lg overflow-hidden shrink-0 relative group/sigil`}
-                   style={{ borderColor: theme.customColor || undefined }}
-                 >
-                    {!theme.customColor && <div className={`absolute inset-0 border-2 ${themeConfig.borderColor} opacity-50 rounded-xl pointer-events-none`} />}
-                    {theme.sigilUrl ? <img src={theme.sigilUrl} alt="" className="w-full h-full object-cover" /> : (isExtinct ? <ShieldOff size={28} className="opacity-90 drop-shadow-lg text-zinc-500" /> : <Shield size={28} className="opacity-90 drop-shadow-lg" style={{ color: theme.customColor || undefined }} />)}
-                    {!theme.customColor && !theme.sigilUrl && !isExtinct && <Shield size={28} className={`opacity-90 drop-shadow-lg ${themeConfig.accentColor}`} />}
+                 <div className="relative group/sigil">
+                     <div
+                       className={`w-14 h-14 rounded-2xl flex items-center justify-center bg-black/40 backdrop-blur-md border-2 shadow-lg overflow-hidden shrink-0 relative`}
+                       style={{ borderColor: theme.customColor || undefined }}
+                     >
+                        {!theme.customColor && <div className={`absolute inset-0 border-2 ${themeConfig.borderColor} opacity-50 rounded-xl pointer-events-none`} />}
+                        {theme.sigilUrl ? <img src={theme.sigilUrl} alt="" className="w-full h-full object-cover" /> : (isExtinct ? <ShieldOff size={28} className="opacity-90 drop-shadow-lg text-zinc-500" /> : <Shield size={28} className="opacity-90 drop-shadow-lg" style={{ color: theme.customColor || undefined }} />)}
+                        {!theme.customColor && !theme.sigilUrl && !isExtinct && <Shield size={28} className={`opacity-90 drop-shadow-lg ${themeConfig.accentColor}`} />}
+                     </div>
 
-                    {/* Sigil Tooltip */}
+                    {/* Sigil Tooltip - Outside overflow-hidden */}
                     {theme.sigilDescription && (
                         <div className="absolute top-16 left-0 w-64 bg-zinc-950 border border-zinc-700 p-3 rounded-lg shadow-2xl opacity-0 group-hover/sigil:opacity-100 transition-opacity pointer-events-none z-[100] text-xs font-sans text-zinc-300 text-left">
                             <div className="flex items-center gap-2 mb-1 text-white font-bold font-cinzel border-b border-zinc-800 pb-1">
