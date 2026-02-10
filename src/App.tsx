@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { HelpCircle, Move, RotateCcw, RotateCw } from 'lucide-react';
+import { HelpCircle, Move, RotateCcw, RotateCw, Wand2 } from 'lucide-react';
 import { signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
 import { collection, doc, setDoc, onSnapshot } from 'firebase/firestore';
 
@@ -11,6 +11,7 @@ import {
   CARD_WIDTH, X_SPACING, Y_SPACING, CANVAS_SIZE, APP_ID
 } from './constants/config';
 import { useUndoRedo } from './hooks/useUndoRedo';
+import { calculateAutoLayout } from './utils/layout';
 
 import ConnectionLines from './components/ConnectionLines';
 import CharacterNode from './components/CharacterNode';
@@ -35,6 +36,12 @@ export default function App() {
     canRedo,
     reset: resetDatasets
   } = useUndoRedo<Record<string, HouseData>>(INITIAL_DATASETS);
+
+  // Keep a ref of datasets to avoid stale closures in snapshot listeners
+  const datasetsRef = useRef(datasets);
+  useEffect(() => {
+    datasetsRef.current = datasets;
+  }, [datasets]);
 
   const [activeTab, setActiveTab] = useState<string>('targaryen');
   const [focusTarget, setFocusTarget] = useState<string | null>(null);
@@ -66,6 +73,7 @@ export default function App() {
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [draggingNode, setDraggingNode] = useState<string | null>(null);
+  const isFirstDragMove = useRef(false);
 
   const [modalMode, setModalMode] = useState<'add-child' | 'add-parent' | 'add-partner' | 'edit' | 'create-house' | 'edit-house' | 'add-root' | null>(null);
   const [selectedCharId, setSelectedCharId] = useState<string | null>(null);
@@ -109,12 +117,21 @@ export default function App() {
     if (!user || !db) return;
     const housesRef = collection(db, 'artifacts', APP_ID, 'users', user.uid, 'houses');
     const unsubscribe = onSnapshot(housesRef, (snapshot) => {
+      // Ignore local writes (latency compensation) to preserve undo history
+      if (snapshot.metadata.hasPendingWrites) return;
+
       if (!snapshot.empty) {
         const loadedDatasets: Record<string, HouseData> = {};
         snapshot.forEach(doc => {
           loadedDatasets[doc.id] = doc.data() as HouseData;
         });
-        resetDatasets({ ...datasets, ...loadedDatasets });
+
+        // Only update if data has actually changed to avoid clearing undo history unnecessarily
+        // This handles the case where the server confirms our own write (which we already have)
+        const merged = { ...datasetsRef.current, ...loadedDatasets };
+        if (JSON.stringify(merged) !== JSON.stringify(datasetsRef.current)) {
+            resetDatasets(merged);
+        }
       }
     });
     return () => unsubscribe();
@@ -160,6 +177,19 @@ export default function App() {
     );
   }, [datasets]);
 
+  const handleAutoLayout = () => {
+    setDatasets(prev => {
+      const currentHouse = prev[activeTab];
+      if (!currentHouse) return prev;
+
+      const newCharacters = calculateAutoLayout(currentHouse.characters, currentHouse.connections);
+      const updatedHouse = { ...currentHouse, characters: newCharacters };
+      saveHouseToDb(updatedHouse);
+
+      return { ...prev, [activeTab]: updatedHouse };
+    });
+  };
+
   useEffect(() => {
     if (searchQuery.trim() === '') {
         setSearchResults([]);
@@ -203,6 +233,7 @@ export default function App() {
     if (target.closest('button') || target.closest('a') || target.closest('.no-drag')) return;
     e.stopPropagation(); e.preventDefault();
     setDraggingNode(charId); setActiveMenu(null);
+    isFirstDragMove.current = true;
   }, []);
 
   const handleCanvasMouseDown = (e: React.MouseEvent) => {
@@ -215,6 +246,10 @@ export default function App() {
     if (draggingNode) {
       const deltaX = e.movementX / scale;
       const deltaY = e.movementY / scale;
+
+      // Use replace: true for subsequent moves to avoid filling history with intermediate states
+      const shouldReplace = !isFirstDragMove.current;
+
       setDatasets(prev => {
         const house = prev[activeTab];
         if(!house) return prev;
@@ -225,7 +260,9 @@ export default function App() {
           return c;
         });
         return { ...prev, [activeTab]: { ...house, characters: newChars } };
-      });
+      }, { replace: shouldReplace });
+
+      isFirstDragMove.current = false;
     } else if (isPanning) {
       setPosition({ x: e.clientX - panStart.x, y: e.clientY - panStart.y });
     }
@@ -532,6 +569,9 @@ export default function App() {
                 <RotateCw size={16}/>
              </button>
            </div>
+
+           <button onClick={handleAutoLayout} className="bg-zinc-900/90 hover:bg-zinc-800 px-4 py-2.5 rounded-lg text-xs border border-zinc-700 flex items-center gap-2 text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105"><Wand2 size={16}/> Auto-Layout</button>
+
            <button onClick={() => setShowLegend(true)} className="bg-zinc-900/90 hover:bg-zinc-800 px-4 py-2.5 rounded-lg text-xs border border-zinc-700 flex items-center gap-2 text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105"><HelpCircle size={16}/> Leyenda</button>
            <button onClick={() => centerView()} className="bg-zinc-900/90 hover:bg-zinc-800 px-4 py-2.5 rounded-lg text-xs border border-zinc-700 flex items-center gap-2 text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105"><Move size={16}/> Centrar</button>
       </div>

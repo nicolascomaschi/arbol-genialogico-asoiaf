@@ -26,7 +26,8 @@ export function useUndoRedo<T>(initialState: T) {
   }, []);
 
   // Set new state (pushes to history)
-  const set = useCallback((newState: T | ((prev: T) => T)) => {
+  // Added options for replace
+  const set = useCallback((newState: T | ((prev: T) => T), options: { replace?: boolean } = {}) => {
     setState((prev) => {
       const nextState = typeof newState === 'function'
         ? (newState as (prev: T) => T)(prev)
@@ -34,18 +35,23 @@ export function useUndoRedo<T>(initialState: T) {
 
       if (nextState === prev) return prev;
 
-      // If we are in the middle of history, discard future states
-      if (currentIndex.current < history.current.length - 1) {
-        history.current = history.current.slice(0, currentIndex.current + 1);
-      }
+      if (options.replace) {
+        // Replace current state in history
+        history.current[currentIndex.current] = nextState;
+      } else {
+        // If we are in the middle of history, discard future states
+        if (currentIndex.current < history.current.length - 1) {
+          history.current = history.current.slice(0, currentIndex.current + 1);
+        }
 
-      history.current.push(nextState);
-      currentIndex.current = history.current.length - 1;
+        history.current.push(nextState);
+        currentIndex.current = history.current.length - 1;
 
-      // Limit history size
-      if (history.current.length > MAX_HISTORY_SIZE) {
-        history.current.shift();
-        currentIndex.current--;
+        // Limit history size
+        if (history.current.length > MAX_HISTORY_SIZE) {
+          history.current.shift();
+          currentIndex.current--;
+        }
       }
 
       updateAvailability();
