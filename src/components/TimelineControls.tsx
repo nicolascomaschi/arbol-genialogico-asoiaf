@@ -30,75 +30,94 @@ const TimelineControls: React.FC<TimelineControlsProps> = ({
   // If currentYear is null (timeline inactive), we treat it as maxYear for slider position
   const sliderValue = currentYear ?? maxYear;
 
+  // Calculate percentage for the tooltip position (inverted because slider is vertical max-to-min visually often, but here min is bottom)
+  // Our slider is rotated -90deg.
+  // Input Range: min (left/bottom) -> max (right/top).
+  const percentage = ((sliderValue - minYear) / (maxYear - minYear)) * 100;
+
   return (
-    <div className={`bg-zinc-900/90 border border-zinc-700 rounded-xl py-4 px-2 flex flex-col items-center gap-4 shadow-2xl backdrop-blur-md w-16 ${className}`}>
+    <div className={`bg-zinc-900/95 border border-zinc-700 rounded-2xl py-4 px-2 flex flex-col items-center gap-6 shadow-[0_0_40px_rgba(0,0,0,0.5)] backdrop-blur-xl w-20 transition-all duration-300 ${className}`}>
+
+      {/* Current Year Display - Top Prominence */}
+      <div className="flex flex-col items-center justify-center w-full pb-2 border-b border-zinc-800">
+         <div className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold mb-1">Año</div>
+         <div className={`text-sm font-cinzel font-bold text-center leading-none ${currentYear !== null ? 'text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]' : 'text-zinc-600'}`}>
+            {currentYear !== null ? formatYear(currentYear) : '---'}
+         </div>
+      </div>
 
       {/* Filters Section (Icons Only) */}
-      <div className="flex flex-col gap-2 w-full">
+      <div className="flex flex-col gap-3 w-full px-1">
         <button
           onClick={onToggleDragonRiders}
-          className={`w-full aspect-square rounded-lg flex items-center justify-center transition-all border ${
+          className={`w-full aspect-square rounded-xl flex items-center justify-center transition-all duration-200 border-2 ${
             showDragonRiders
-              ? 'bg-orange-900/40 text-orange-200 border-orange-700/50'
-              : 'bg-zinc-800/50 text-zinc-400 border-zinc-700 hover:bg-zinc-800 hover:text-zinc-200'
+              ? 'bg-orange-950/50 text-orange-400 border-orange-500/50 shadow-[0_0_15px_rgba(249,115,22,0.2)]'
+              : 'bg-zinc-800/30 text-zinc-500 border-transparent hover:bg-zinc-800 hover:text-zinc-300 hover:border-zinc-600'
           }`}
           title="Ver solo Jinetes de Dragón"
         >
-          <Flame size={18} className={showDragonRiders ? 'text-orange-500' : 'text-zinc-500'} />
+          <Flame size={20} className={showDragonRiders ? 'fill-orange-500/20' : ''} />
         </button>
 
         <button
           onClick={onToggleKings}
-          className={`w-full aspect-square rounded-lg flex items-center justify-center transition-all border ${
+          className={`w-full aspect-square rounded-xl flex items-center justify-center transition-all duration-200 border-2 ${
             showKings
-              ? 'bg-yellow-900/40 text-yellow-200 border-yellow-700/50'
-              : 'bg-zinc-800/50 text-zinc-400 border-zinc-700 hover:bg-zinc-800 hover:text-zinc-200'
+              ? 'bg-yellow-950/50 text-yellow-400 border-yellow-500/50 shadow-[0_0_15px_rgba(234,179,8,0.2)]'
+              : 'bg-zinc-800/30 text-zinc-500 border-transparent hover:bg-zinc-800 hover:text-zinc-300 hover:border-zinc-600'
           }`}
           title="Ver solo Reyes"
         >
-          <Crown size={18} className={showKings ? 'text-yellow-500' : 'text-zinc-500'} />
+          <Crown size={20} className={showKings ? 'fill-yellow-500/20' : ''} />
         </button>
       </div>
 
-      <div className="w-full h-px bg-zinc-800" />
-
       {/* Vertical Slider Section */}
-      <div className="flex-1 flex flex-col items-center gap-2 h-64 w-full relative py-2">
-        <div className="text-[10px] text-zinc-500 font-mono">{formatYear(maxYear)}</div>
+      <div className="flex-1 flex flex-col items-center justify-center w-full relative min-h-[220px]">
+        {/* Track Line Background */}
+        <div className="absolute h-full w-1 bg-zinc-800 rounded-full" />
+        <div className="absolute bottom-0 w-1 bg-gradient-to-t from-zinc-600 to-zinc-800 rounded-full transition-all duration-100" style={{ height: `${percentage}%` }} />
 
-        {/* Slider Container */}
-        <div className="relative flex-1 w-full flex items-center justify-center">
-             {/* We use a transformed horizontal input to behave vertically */}
+        {/* Input Range - Rotated */}
+        {/* We use a large width and rotate it. The 'width' in CSS becomes the 'height' of the vertical slider area. */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
              <input
               type="range"
               min={minYear}
               max={maxYear}
               value={sliderValue}
               onChange={(e) => onYearChange(parseInt(e.target.value, 10))}
-              className="absolute w-48 h-1.5 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-white hover:accent-zinc-300 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all -rotate-90 origin-center"
-              style={{ width: '160px' }} // Width becomes height when rotated
+              className="w-[200px] h-10 opacity-0 cursor-pointer pointer-events-auto -rotate-90"
+              style={{ width: '220px' }}
             />
         </div>
 
-        <div className="text-[10px] text-zinc-500 font-mono">{formatYear(minYear)}</div>
-      </div>
-
-      <div className="w-full h-px bg-zinc-800" />
-
-      {/* Current Year & Reset */}
-      <div className="flex flex-col items-center gap-2 w-full">
-        <div className={`text-[10px] font-bold font-mono text-center ${currentYear !== null ? 'text-white' : 'text-zinc-500'}`}>
-            {currentYear !== null ? formatYear(currentYear) : 'TODOS'}
+        {/* Custom Thumb Visual (Follows value) */}
+        <div
+            className="absolute w-4 h-4 bg-white rounded-full shadow-[0_0_15px_rgba(255,255,255,0.5)] border-2 border-zinc-900 pointer-events-none transition-all duration-75 ease-out"
+            style={{ bottom: `calc(${percentage}% - 8px)` }}
+        >
+            <div className="absolute right-full top-1/2 -translate-y-1/2 mr-3 px-2 py-1 bg-zinc-800 text-white text-[10px] font-mono rounded border border-zinc-700 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                {formatYear(sliderValue)}
+            </div>
         </div>
 
-        <button
-          onClick={onReset}
-          className="p-2 hover:bg-zinc-800 rounded-full text-zinc-400 hover:text-white transition-colors"
-          title="Restablecer filtros"
-        >
-          <RotateCcw size={16} />
-        </button>
+        {/* Min/Max indicators */}
+        <div className="absolute -top-6 text-[9px] text-zinc-600 font-mono">{formatYear(maxYear)}</div>
+        <div className="absolute -bottom-6 text-[9px] text-zinc-600 font-mono">{formatYear(minYear)}</div>
       </div>
+
+      <div className="w-full h-px bg-zinc-800 mt-2" />
+
+      {/* Reset Button */}
+      <button
+        onClick={onReset}
+        className="p-3 hover:bg-red-900/20 text-zinc-500 hover:text-red-400 rounded-xl transition-all duration-300 group"
+        title="Restablecer filtros"
+      >
+        <RotateCcw size={18} className="group-hover:-rotate-180 transition-transform duration-500" />
+      </button>
     </div>
   );
 };
