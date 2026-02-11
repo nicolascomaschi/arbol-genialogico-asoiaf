@@ -660,7 +660,12 @@ export default function App() {
       {/* CANVAS */}
       <div 
         className={`flex-1 w-full h-full relative overflow-hidden ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
-        onMouseDown={handleCanvasMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp} onWheel={handleWheel} ref={containerRef}
+        onMouseDown={handleCanvasMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        onWheel={handleWheel}
+        ref={containerRef}
       >
         <div style={{ transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`, transformOrigin: '0 0', width: `${CANVAS_SIZE}px`, height: `${CANVAS_SIZE}px` }} className="relative transition-transform duration-75 ease-linear">
            {/* Grid Background */}
