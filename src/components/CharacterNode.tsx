@@ -2,7 +2,7 @@ import React, { memo } from 'react';
 import {
   GitCommit, MoreVertical, User, Crown, Flame, Ban, AlertTriangle,
   Skull, HelpCircle, Ghost, BookOpen, LogOut, Edit2, Plus, UserPlus,
-  HeartPulse, Trash2
+  HeartPulse, Trash2, Minus
 } from 'lucide-react';
 import { Character, ThemeConfig } from '../types';
 import { GAP_NODE_SIZE, CARD_WIDTH, CARD_HEIGHT, X_SPACING, Y_SPACING } from '../constants/config';
@@ -25,6 +25,10 @@ interface CharacterNodeProps {
   onDelete: (id: string) => void;
   onNavigate: (char: Character) => void;
   isDimmed?: boolean;
+  setHoveredNode?: (id: string | null) => void;
+  isCollapsed?: boolean;
+  toggleCollapse?: (id: string) => void;
+  hasChildren?: boolean;
 }
 
 const CharacterNode: React.FC<CharacterNodeProps> = ({
@@ -40,7 +44,11 @@ const CharacterNode: React.FC<CharacterNodeProps> = ({
   onOpenModal,
   onDelete,
   onNavigate,
-  isDimmed
+  isDimmed,
+  setHoveredNode,
+  isCollapsed,
+  toggleCollapse,
+  hasChildren
 }) => {
   return (
     <div
@@ -60,6 +68,8 @@ const CharacterNode: React.FC<CharacterNodeProps> = ({
           transition: draggingNode === char.id ? 'none' : 'transform 0.2s, box-shadow 0.2s, border-color 0.3s'
       }}
       onMouseDown={(e) => onNodeDragStart(e, char.id)}
+      onMouseEnter={() => setHoveredNode && setHoveredNode(char.id)}
+      onMouseLeave={() => setHoveredNode && setHoveredNode(null)}
     >
       {char.isGap ? (
          <>
@@ -121,6 +131,19 @@ const CharacterNode: React.FC<CharacterNodeProps> = ({
                   <p className="text-xs text-zinc-400 italic font-lato whitespace-pre-wrap leading-tight">{char.title}</p>
                   {(char.birthYear || char.deathYear) && <div className="text-[10px] text-zinc-500 mt-1 font-mono">{char.birthYear || '?'} - {char.deathYear || '?'}</div>}
               </div>
+
+              {/* --- COLLAPSE BUTTON --- */}
+              {hasChildren && toggleCollapse && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleCollapse(char.id); }}
+                    className={`absolute bottom-[-10px] left-1/2 -translate-x-1/2 w-5 h-5 rounded-full flex items-center justify-center z-50 border border-zinc-700 text-zinc-400 hover:text-white transition-all shadow-md
+                        ${isCollapsed ? 'bg-zinc-700' : 'bg-zinc-900'}
+                    `}
+                    title={isCollapsed ? "Expandir" : "Colapsar"}
+                  >
+                      {isCollapsed ? <Plus size={10} strokeWidth={3}/> : <Minus size={10} strokeWidth={3}/>}
+                  </button>
+              )}
 
               {/* --- LINK A OTRA CASA (Top Right - Debajo de los 3 puntos) --- */}
               {targetHouseName && (
