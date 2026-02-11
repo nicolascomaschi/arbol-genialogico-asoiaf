@@ -617,21 +617,8 @@ export default function App() {
         isExtinct={!!currentData.isExtinct}
       />
 
-      {/* FIXED BOTTOM RIGHT BUTTONS */}
-      <div className="fixed bottom-6 right-6 z-[70] flex flex-col gap-2 w-16">
-           <TimelineControls
-                minYear={timelineBounds.min}
-                maxYear={timelineBounds.max}
-                currentYear={timelineYear}
-                onYearChange={setTimelineYear}
-                showDragonRiders={showDragonRiders}
-                onToggleDragonRiders={() => setShowDragonRiders(prev => !prev)}
-                showKings={showKings}
-                onToggleKings={() => setShowKings(prev => !prev)}
-                onReset={() => { setTimelineYear(null); setShowDragonRiders(false); setShowKings(false); }}
-                className="mb-2"
-           />
-
+      {/* FIXED BOTTOM LEFT CONTROLS */}
+      <div className="fixed bottom-6 left-6 z-[70] flex flex-col gap-2 w-16">
            <div className="flex gap-2 w-full">
              <button
                 onClick={undo}
@@ -655,6 +642,22 @@ export default function App() {
 
            <button onClick={() => setShowLegend(true)} title="Leyenda" className="w-full bg-zinc-900/90 hover:bg-zinc-800 h-10 rounded-lg text-xs border border-zinc-700 flex items-center justify-center text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105"><HelpCircle size={18}/></button>
            <button onClick={() => centerView()} title="Centrar Vista" className="w-full bg-zinc-900/90 hover:bg-zinc-800 h-10 rounded-lg text-xs border border-zinc-700 flex items-center justify-center text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105"><Move size={18}/></button>
+      </div>
+
+      {/* FIXED BOTTOM RIGHT TIMELINE */}
+      <div className="fixed bottom-6 right-6 z-[70] flex flex-col gap-2 w-16">
+           <TimelineControls
+                minYear={timelineBounds.min}
+                maxYear={timelineBounds.max}
+                currentYear={timelineYear}
+                onYearChange={setTimelineYear}
+                showDragonRiders={showDragonRiders}
+                onToggleDragonRiders={() => setShowDragonRiders(prev => !prev)}
+                showKings={showKings}
+                onToggleKings={() => setShowKings(prev => !prev)}
+                onReset={() => { setTimelineYear(null); setShowDragonRiders(false); setShowKings(false); }}
+                className="mb-2"
+           />
       </div>
 
       {/* CANVAS */}
