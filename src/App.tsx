@@ -617,8 +617,8 @@ export default function App() {
         isExtinct={!!currentData.isExtinct}
       />
 
-      {/* FIXED BOTTOM LEFT BUTTONS */}
-      <div className="fixed bottom-6 left-6 z-[70] flex flex-col gap-2 w-16">
+      {/* FIXED BOTTOM RIGHT BUTTONS */}
+      <div className="fixed bottom-6 right-6 z-[70] flex flex-col gap-2 w-16">
            <TimelineControls
                 minYear={timelineBounds.min}
                 maxYear={timelineBounds.max}
