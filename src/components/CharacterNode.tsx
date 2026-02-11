@@ -103,7 +103,7 @@ const CharacterNode: React.FC<CharacterNodeProps> = ({
               {/* --- TEXTO (Sobrepuesto abajo) --- */}
               <div className="absolute bottom-0 left-0 w-full p-4 z-10 bg-gradient-to-t from-black/90 to-transparent pt-8 rounded-b-xl">
                   <h3 className={`font-cinzel font-bold text-lg leading-tight text-white drop-shadow-md ${char.isNonCanon ? 'italic text-amber-200' : ''}`}>{char.name}</h3>
-                  <p className="text-xs text-zinc-400 italic font-lato line-clamp-1">{char.title}</p>
+                  <p className="text-xs text-zinc-400 italic font-lato whitespace-pre-wrap leading-tight">{char.title}</p>
                   {(char.birthYear || char.deathYear) && <div className="text-[10px] text-zinc-500 mt-1 font-mono">{char.birthYear || '?'} - {char.deathYear || '?'}</div>}
               </div>
 

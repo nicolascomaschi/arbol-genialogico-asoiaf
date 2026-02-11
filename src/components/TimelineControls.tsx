@@ -102,10 +102,9 @@ const TimelineControls: React.FC<TimelineControlsProps> = ({
               style={{
                   appearance: 'slider-vertical', // Works in Chrome/Edge/Safari
                   WebkitAppearance: 'slider-vertical',
-                  writingMode: 'bt-lr', // IE/Edge legacy
                   width: '100%',
                   height: '100%'
-              }}
+              } as React.CSSProperties}
             />
         </div>
 

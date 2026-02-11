@@ -54,7 +54,7 @@ const Header: React.FC<HeaderProps> = ({
   isExtinct
 }) => {
   return (
-    <div className={`absolute top-0 left-0 w-full z-50 bg-gradient-to-b p-0 pb-12 pointer-events-none transition-colors duration-500`} style={theme.customColor ? { background: `linear-gradient(to bottom, ${theme.customColor}E6, transparent)` } : undefined}>
+    <div className={`absolute top-0 left-0 w-full z-[60] bg-gradient-to-b p-0 pb-12 pointer-events-none transition-colors duration-500`} style={theme.customColor ? { background: `linear-gradient(to bottom, ${theme.customColor}E6, transparent)` } : undefined}>
          {!theme.customColor && <div className={`absolute inset-0 bg-gradient-to-b ${themeConfig.bgGradient} -z-10`} />}
          <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-3 pointer-events-auto gap-4">
              <div className="flex items-center gap-6 group">
