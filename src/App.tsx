@@ -618,30 +618,41 @@ export default function App() {
       />
 
       {/* FIXED BOTTOM LEFT CONTROLS */}
-      <div className="fixed bottom-6 left-6 z-[70] flex flex-col gap-2 w-16">
-           <div className="flex gap-2 w-full">
-             <button
-                onClick={undo}
-                disabled={!canUndo}
-                className={`flex-1 bg-zinc-900/90 hover:bg-zinc-800 h-8 rounded-lg text-xs border border-zinc-700 flex items-center justify-center text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105 ${!canUndo ? 'opacity-50 cursor-not-allowed hover:scale-100' : ''}`}
-                title="Deshacer (Ctrl+Z)"
-             >
-                <RotateCcw size={14}/>
-             </button>
-             <button
-                onClick={redo}
-                disabled={!canRedo}
-                className={`flex-1 bg-zinc-900/90 hover:bg-zinc-800 h-8 rounded-lg text-xs border border-zinc-700 flex items-center justify-center text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105 ${!canRedo ? 'opacity-50 cursor-not-allowed hover:scale-100' : ''}`}
-                title="Rehacer (Ctrl+Y)"
-             >
-                <RotateCw size={14}/>
-             </button>
-           </div>
+      <div className="fixed bottom-6 left-6 z-[70]">
+        <div className="bg-zinc-900/95 border border-zinc-700 rounded-2xl py-3 px-2 flex flex-col items-center gap-2 shadow-[0_0_40px_rgba(0,0,0,0.5)] backdrop-blur-xl w-14 transition-all duration-300">
 
-           <button onClick={handleAutoLayout} title="Auto-Layout" className="w-full bg-zinc-900/90 hover:bg-zinc-800 h-10 rounded-lg text-xs border border-zinc-700 flex items-center justify-center text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105"><Wand2 size={18}/></button>
+           <button
+              onClick={undo}
+              disabled={!canUndo}
+              className={`w-10 h-10 rounded-xl flex items-center justify-center text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-all ${!canUndo ? 'opacity-30 cursor-not-allowed' : ''}`}
+              title="Deshacer (Ctrl+Z)"
+           >
+              <RotateCcw size={20}/>
+           </button>
 
-           <button onClick={() => setShowLegend(true)} title="Leyenda" className="w-full bg-zinc-900/90 hover:bg-zinc-800 h-10 rounded-lg text-xs border border-zinc-700 flex items-center justify-center text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105"><HelpCircle size={18}/></button>
-           <button onClick={() => centerView()} title="Centrar Vista" className="w-full bg-zinc-900/90 hover:bg-zinc-800 h-10 rounded-lg text-xs border border-zinc-700 flex items-center justify-center text-zinc-300 font-cinzel shadow-xl backdrop-blur-sm transition-all hover:scale-105"><Move size={18}/></button>
+           <button
+              onClick={redo}
+              disabled={!canRedo}
+              className={`w-10 h-10 rounded-xl flex items-center justify-center text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-all ${!canRedo ? 'opacity-30 cursor-not-allowed' : ''}`}
+              title="Rehacer (Ctrl+Y)"
+           >
+              <RotateCw size={20}/>
+           </button>
+
+           <div className="w-8 h-px bg-zinc-800 my-1" />
+
+           <button onClick={handleAutoLayout} title="Auto-Layout" className="w-10 h-10 rounded-xl flex items-center justify-center text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-all">
+              <Wand2 size={20}/>
+           </button>
+
+           <button onClick={() => setShowLegend(true)} title="Leyenda" className="w-10 h-10 rounded-xl flex items-center justify-center text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-all">
+              <HelpCircle size={20}/>
+           </button>
+
+           <button onClick={() => centerView()} title="Centrar Vista" className="w-10 h-10 rounded-xl flex items-center justify-center text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-all">
+              <Move size={20}/>
+           </button>
+        </div>
       </div>
 
       {/* FIXED BOTTOM RIGHT TIMELINE */}
