@@ -104,7 +104,7 @@ const TimelineControls: React.FC<TimelineControlsProps> = ({
                   WebkitAppearance: 'slider-vertical',
                   width: '100%',
                   height: '100%'
-              } as React.CSSProperties}
+              } as unknown as React.CSSProperties}
             />
         </div>
 
