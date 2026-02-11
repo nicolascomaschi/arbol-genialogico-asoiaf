@@ -18,6 +18,7 @@ export type Character = {
   birthYear?: string;
   deathYear?: string;
   lore?: string;
+  wikiLink?: string;
   status?: CharacterStatus;
 };
 

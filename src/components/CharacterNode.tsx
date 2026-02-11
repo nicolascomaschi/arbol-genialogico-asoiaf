@@ -93,10 +93,25 @@ const CharacterNode: React.FC<CharacterNodeProps> = ({
               </div>
 
               {/* --- LORE (Tooltip - Top Left) --- */}
-              {char.lore && (
+              {(char.lore || char.wikiLink) && (
                   <div className="absolute top-2 left-2 z-20 group/lore pointer-events-auto">
-                      <BookOpen size={16} className="text-zinc-400 hover:text-white cursor-help drop-shadow-md"/>
-                      <div className="absolute left-0 top-6 w-56 bg-zinc-950 border border-zinc-700 p-3 rounded text-xs text-zinc-300 shadow-xl opacity-0 group-hover/lore:opacity-100 pointer-events-none transition-opacity font-lato leading-relaxed z-50">{char.lore}</div>
+                      {char.wikiLink ? (
+                          <a
+                             href={char.wikiLink}
+                             target="_blank"
+                             rel="noopener noreferrer"
+                             onClick={(e) => e.stopPropagation()}
+                             className="block text-zinc-400 hover:text-white transition-colors"
+                             title="Ver Wiki"
+                          >
+                              <BookOpen size={16} className="drop-shadow-md"/>
+                          </a>
+                      ) : (
+                          <BookOpen size={16} className="text-zinc-400 hover:text-white cursor-help drop-shadow-md"/>
+                      )}
+                      {char.lore && (
+                          <div className="absolute left-0 top-6 w-56 bg-zinc-950 border border-zinc-700 p-3 rounded text-xs text-zinc-300 shadow-xl opacity-0 group-hover/lore:opacity-100 pointer-events-none transition-opacity font-lato leading-relaxed z-50">{char.lore}</div>
+                      )}
                   </div>
               )}
 
