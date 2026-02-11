@@ -102,12 +102,49 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
                    <Info size={14} className="mr-2"/> Usa "Vincular" para conectar
                 </div>
             ) : (
-                <div className="bg-zinc-900 p-2 rounded h-40 overflow-y-auto">
-                    {allCharacters.filter(c => c.id !== selectedCharId).map(c => (
-                        <div key={c.id} onClick={() => setLinkCharId(c.id)} className={`p-2 cursor-pointer hover:bg-zinc-800 ${linkCharId === c.id ? 'bg-zinc-700' : ''}`}>
-                            {c.name}
-                        </div>
-                    ))}
+                <div className="bg-zinc-900 p-2 rounded h-48 overflow-y-auto custom-scrollbar flex flex-col gap-1">
+                    {allCharacters.filter(c => c.id !== selectedCharId).map(c => {
+                        const charHouse = datasets[c.house || '']?.theme;
+                        return (
+                            <div
+                                key={c.id}
+                                onClick={() => setLinkCharId(c.id)}
+                                className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-all border ${linkCharId === c.id ? 'bg-zinc-800 border-emerald-500/50 shadow-md' : 'border-transparent hover:bg-zinc-800 hover:border-zinc-700'}`}
+                            >
+                                {/* Avatar */}
+                                <div className="w-10 h-10 rounded-full bg-black overflow-hidden border border-zinc-700 shrink-0 relative">
+                                    {c.imageUrl ? (
+                                        <img src={c.imageUrl} alt={c.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-zinc-600 font-cinzel font-bold text-xs">
+                                            {c.name.charAt(0)}
+                                        </div>
+                                    )}
+                                    {charHouse?.customColor && (
+                                        <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full border border-black" style={{ backgroundColor: charHouse.customColor }} />
+                                    )}
+                                </div>
+
+                                {/* Info */}
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between">
+                                        <span className={`text-sm font-bold font-cinzel truncate ${linkCharId === c.id ? 'text-emerald-400' : 'text-zinc-200'}`}>
+                                            {c.name}
+                                        </span>
+                                        {charHouse && <span className="text-[10px] uppercase text-zinc-500 tracking-wider ml-2 shrink-0">{charHouse.name}</span>}
+                                    </div>
+                                    <div className="flex items-center gap-2 text-xs text-zinc-400 font-lato">
+                                        {c.title && <span className="truncate italic max-w-[120px]">{c.title}</span>}
+                                        {(c.birthYear || c.deathYear) && (
+                                            <span className="text-[10px] font-mono text-zinc-500 bg-zinc-950 px-1.5 rounded">
+                                                {c.birthYear || '?'} - {c.deathYear || '?'}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             )}
 
