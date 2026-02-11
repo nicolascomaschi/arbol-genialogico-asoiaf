@@ -41,7 +41,7 @@ const TimelineControls: React.FC<TimelineControlsProps> = ({
   );
 
   return (
-    <div className={`bg-zinc-900/95 border border-zinc-700 rounded-2xl py-4 px-2 flex flex-col items-center gap-6 shadow-[0_0_40px_rgba(0,0,0,0.5)] backdrop-blur-xl w-20 transition-all duration-300 ${className}`}>
+    <div className={`bg-zinc-900/95 border border-zinc-700 rounded-2xl py-2 px-2 flex flex-col items-center gap-3 shadow-[0_0_40px_rgba(0,0,0,0.5)] backdrop-blur-xl w-20 transition-all duration-300 ${className}`}>
 
       {/* Current Year Display */}
       <div className="flex flex-col items-center justify-center w-full pb-2 border-b border-zinc-800">
@@ -52,7 +52,7 @@ const TimelineControls: React.FC<TimelineControlsProps> = ({
       </div>
 
       {/* Filters Section */}
-      <div className="flex flex-col gap-3 w-full px-1">
+      <div className="flex flex-col gap-2 w-full px-1">
         <button
           onClick={onToggleDragonRiders}
           onMouseEnter={() => setHoveredButton('dragon')}
@@ -63,7 +63,7 @@ const TimelineControls: React.FC<TimelineControlsProps> = ({
               : 'bg-zinc-800/30 text-zinc-500 border-transparent hover:bg-zinc-800 hover:text-zinc-300 hover:border-zinc-600'
           }`}
         >
-          <Flame size={20} className={showDragonRiders ? 'fill-orange-500/20' : ''} />
+          <Flame size={18} className={showDragonRiders ? 'fill-orange-500/20' : ''} />
           {hoveredButton === 'dragon' && renderTooltip("Jinetes de Dragón")}
         </button>
 
@@ -77,13 +77,13 @@ const TimelineControls: React.FC<TimelineControlsProps> = ({
               : 'bg-zinc-800/30 text-zinc-500 border-transparent hover:bg-zinc-800 hover:text-zinc-300 hover:border-zinc-600'
           }`}
         >
-          <Crown size={20} className={showKings ? 'fill-yellow-500/20' : ''} />
+          <Crown size={18} className={showKings ? 'fill-yellow-500/20' : ''} />
           {hoveredButton === 'kings' && renderTooltip("Reyes de Poniente")}
         </button>
       </div>
 
       {/* Vertical Slider Section */}
-      <div className="flex-1 flex flex-col items-center justify-center w-full relative min-h-[220px]">
+      <div className="flex-1 flex flex-col items-center justify-center w-full relative min-h-[150px]">
         {/* Track Line Background */}
         <div className="absolute h-full w-1 bg-zinc-800 rounded-full" />
         <div className="absolute bottom-0 w-1 bg-gradient-to-t from-zinc-600 to-zinc-800 rounded-full transition-all duration-100" style={{ height: `${percentage}%` }} />
@@ -127,9 +127,9 @@ const TimelineControls: React.FC<TimelineControlsProps> = ({
         onClick={onReset}
         onMouseEnter={() => setHoveredButton('reset')}
         onMouseLeave={() => setHoveredButton(null)}
-        className="p-3 hover:bg-red-900/20 text-zinc-500 hover:text-red-400 rounded-xl transition-all duration-300 group relative"
+        className="p-2 hover:bg-red-900/20 text-zinc-500 hover:text-red-400 rounded-xl transition-all duration-300 group relative"
       >
-        <RotateCcw size={18} className="group-hover:-rotate-180 transition-transform duration-500" />
+        <RotateCcw size={16} className="group-hover:-rotate-180 transition-transform duration-500" />
         {hoveredButton === 'reset' && renderTooltip("Restablecer")}
       </button>
     </div>
