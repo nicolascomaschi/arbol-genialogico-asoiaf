@@ -60,6 +60,8 @@ export default function App() {
   const [timelineYear, setTimelineYear] = useState<number | null>(null);
   const [showDragonRiders, setShowDragonRiders] = useState(false);
   const [showKings, setShowKings] = useState(false);
+  const [collapsedNodes, setCollapsedNodes] = useState<Set<string>>(new Set());
+  const [hoveredNode, setHoveredNode] = useState<string | null>(null);
 
   // Fallback Logic
   const currentData = datasets[activeTab] || INITIAL_DATASETS.targaryen;
@@ -72,6 +74,74 @@ export default function App() {
 
   const characters = currentData.characters;
   const connections = currentData.connections;
+
+  // Collapsing Logic
+  const hiddenNodes = useMemo(() => {
+    const hidden = new Set<string>();
+    if (collapsedNodes.size === 0) return hidden;
+
+    const queue = Array.from(collapsedNodes);
+    const processed = new Set<string>();
+
+    // Build a quick map of parent -> children
+    const childrenMap: Record<string, string[]> = {};
+    connections.forEach(conn => {
+        conn.parents.forEach(p => {
+            if (!childrenMap[p]) childrenMap[p] = [];
+            childrenMap[p].push(...conn.children);
+        });
+    });
+
+    while (queue.length > 0) {
+        const currentId = queue.shift()!;
+        if (processed.has(currentId)) continue;
+        processed.add(currentId);
+
+        const children = childrenMap[currentId] || [];
+        children.forEach(childId => {
+            hidden.add(childId);
+            queue.push(childId);
+        });
+    }
+    return hidden;
+  }, [collapsedNodes, connections]);
+
+  const visibleCharacters = useMemo(() => {
+      return characters.filter(c => !hiddenNodes.has(c.id));
+  }, [characters, hiddenNodes]);
+
+  const visibleConnections = useMemo(() => {
+      return connections.filter(conn => {
+          // Hide connection if any child is hidden or ALL parents are hidden (though usually if parent is hidden, child is too)
+          // Simplest: if any participant is hidden, the connection line might look weird.
+          // Correct logic: If a child is hidden, don't show the link to them.
+          // If a parent is hidden... well if parent is hidden, child is likely hidden too.
+          // Let's filter out children from the connection object for rendering purposes?
+          // No, ConnectionLines expects full connection objects.
+          // Better: Filter connections where ALL children are hidden.
+          const visibleChildren = conn.children.filter(c => !hiddenNodes.has(c));
+          if (visibleChildren.length === 0) return false;
+
+          // Also check parents. If all parents are hidden, usually children are hidden too.
+          // But if intermarriage...
+          // Let's just rely on the fact that if a node is hidden, we don't render it.
+          return true;
+      });
+  }, [connections, hiddenNodes]);
+
+
+  const toggleCollapse = useCallback((charId: string) => {
+      setCollapsedNodes(prev => {
+          const next = new Set(prev);
+          if (next.has(charId)) {
+              next.delete(charId);
+          } else {
+              next.add(charId);
+          }
+          return next;
+      });
+  }, []);
+
   const themeConfig = useMemo(() => theme.config || COLOR_THEMES.black, [theme.config]);
 
   const timelineBounds = useMemo(() => {
@@ -688,18 +758,23 @@ export default function App() {
              <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#555 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
            </div>
            
-           <ConnectionLines characters={characters} connections={connections} />
+           <ConnectionLines
+              characters={visibleCharacters}
+              connections={visibleConnections}
+              hoveredNode={hoveredNode}
+           />
 
-           {characters.length === 0 && (
+           {visibleCharacters.length === 0 && characters.length === 0 && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="pointer-events-auto text-center"><h2 className="text-2xl font-cinzel font-bold text-zinc-500 mb-4">Vacío</h2><button onClick={() => setModalMode('add-root')} className="px-6 py-3 rounded-lg bg-zinc-800 text-white font-cinzel border border-zinc-600">Crear Primer Personaje</button></div>
                 </div>
            )}
 
-           {characters.map((char) => {
+           {visibleCharacters.map((char) => {
              const targetHouseName = (char.house && char.house !== activeTab && datasets[char.house])
                 ? datasets[char.house].theme.name
                 : null;
+             const hasChildren = connections.some(conn => conn.parents.includes(char.id));
 
              return (
                  <CharacterNode
@@ -717,6 +792,10 @@ export default function App() {
                     onDelete={deleteCharacter}
                     onNavigate={navigateToCharacterHouse}
                     isDimmed={isNodeDimmed(char)}
+                    setHoveredNode={setHoveredNode}
+                    isCollapsed={collapsedNodes.has(char.id)}
+                    toggleCollapse={toggleCollapse}
+                    hasChildren={hasChildren}
                  />
              );
            })}
