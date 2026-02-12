@@ -78,11 +78,11 @@ const ConnectionLines: React.FC<ConnectionLinesProps> = ({ characters, connectio
         // Request: "fina y semitransparente por defecto" -> opacity-30
         // Hover: "resaltar solo sus conexiones" -> opacity-100 for highlighted, opacity-10 for others
         const groupOpacity = hoveredNode
-            ? (isHighlighted ? 1 : 0.05)
-            : 0.2; // Default low opacity
+            ? (isHighlighted ? 1 : 0.1)
+            : 0.5; // Default low opacity increased to 0.5 for better visibility
 
-        const strokeColor = isHighlighted ? "#e4e4e7" : "#71717a";
-        const strokeWidth = isHighlighted ? 3 : 1.5;
+        const strokeColor = isHighlighted ? "#e4e4e7" : "#a1a1aa"; // Lighter gray for better visibility
+        const strokeWidth = isHighlighted ? 3 : 2;
 
         return (
           <g key={conn.id} style={{ opacity: groupOpacity, transition: 'opacity 0.3s ease' }}>
@@ -95,13 +95,13 @@ const ConnectionLines: React.FC<ConnectionLinesProps> = ({ characters, connectio
                       L ${(parents[1].x * X_SPACING) + CARD_WIDTH/2} ${parents[1].generation * Y_SPACING + CARD_HEIGHT/2}`}
                   stroke={strokeColor}
                   strokeWidth={strokeWidth}
-                  strokeDasharray="4,2"
+                  strokeDasharray="4,4"
                 />
                 {/* Marriage Node Dot */}
                 <circle
                     cx={parentX}
                     cy={parentY - CARD_HEIGHT/2}
-                    r={isHighlighted ? 4 : 2}
+                    r={isHighlighted ? 5 : 3}
                     fill={strokeColor}
                 />
                 {/* Vertical line from Marriage Node to Bottom of cards row (to start children lines) */}

@@ -14,4 +14,7 @@ psd
 thumb
 sketch
 
-# End
+# Enddist/
+dist-ssr/
+*.local
+.vite/

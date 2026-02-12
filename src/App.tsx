@@ -535,7 +535,16 @@ export default function App() {
                    updatedConns.push({ id: `conn_${Date.now()}`, parents: [targetId], children: [baseChar!.id] });
                }
             } else if (mode === 'add-partner') {
-               updatedConns.push({ id: `conn_${Date.now()}`, parents: [baseChar!.id, targetId], children: [] });
+               // Verify if a connection between these two already exists
+               const existingConn = updatedConns.find(c =>
+                   c.parents.length === 2 &&
+                   c.parents.includes(baseChar!.id) &&
+                   c.parents.includes(targetId)
+               );
+
+               if (!existingConn) {
+                   updatedConns.push({ id: `conn_${Date.now()}`, parents: [baseChar!.id, targetId], children: [] });
+               }
             }
             return { ...currentHouse, characters: updatedChars, connections: updatedConns };
         };
