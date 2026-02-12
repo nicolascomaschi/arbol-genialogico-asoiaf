@@ -436,11 +436,9 @@ export default function App() {
               });
 
               if (houseChanged) {
-                 // Trigger auto-layout after unlinking if the structure changed significantly?
-                 // For unlinking, maybe we just save. If user wants to re-layout, they can click the button.
-                 // Or we can enforce layout. Let's try enforcing layout for cleaner result.
-                 const newCharacters = applyAutoLayout(house.characters, newConnections);
-                 next[houseId] = { ...house, connections: newConnections, characters: newCharacters };
+                 // For unlinking, we do NOT trigger auto-layout automatically anymore,
+                 // as it disrupts manual organization. User can trigger it manually.
+                 next[houseId] = { ...house, connections: newConnections };
                  saveHouseToDb(next[houseId]);
                  changed = true;
               }
@@ -462,11 +460,11 @@ export default function App() {
             })).filter(conn => conn.parents.length > 0 || conn.children.length > 0);
 
         const remainingChars = currentHouse.characters.filter(c => c.id !== id);
-        const layoutedChars = applyAutoLayout(remainingChars, newConnections);
+        // NO AUTO LAYOUT ON DELETE
 
         const updatedHouse = {
             ...currentHouse,
-            characters: layoutedChars,
+            characters: remainingChars,
             connections: newConnections
         };
         saveHouseToDb(updatedHouse);
@@ -573,8 +571,14 @@ export default function App() {
                     const allChars = getAllCharacters();
                     const globalChar = allChars.find(c => c.id === targetId);
                     if (globalChar) {
-                        // Position will be fixed by auto-layout
-                        updatedChars.push({ ...globalChar, x: 0, generation: 0 });
+                        let newX = baseChar ? baseChar.x : 0;
+                        let newGen = globalChar.generation;
+                        if (baseChar) {
+                          if (mode === 'add-child') { newGen = baseChar.generation + 1; newX += 0.5; }
+                          else if (mode === 'add-parent') { newGen = baseChar.generation - 1; newX += 0.5; }
+                          else if (mode === 'add-partner') { newGen = baseChar.generation; newX += 1.2; }
+                        }
+                        updatedChars.push({ ...globalChar, x: newX, generation: newGen });
                     }
                 }
             }
@@ -613,9 +617,7 @@ export default function App() {
                }
             }
 
-            // Apply Auto-Layout
-            updatedChars = applyAutoLayout(updatedChars, updatedConns);
-
+            // NO AUTO LAYOUT AUTOMATICALLY
             return { ...currentHouse, characters: updatedChars, connections: updatedConns };
         };
 
@@ -627,15 +629,38 @@ export default function App() {
              });
         } else {
              const newId = `custom_${Date.now()}`;
-             // Initial position, will be fixed by layout
+
+             // Manual Positioning Logic
+             let newGen = 1;
+             let newX = 0;
+             if (baseChar) {
+                newGen = baseChar.generation;
+                newX = baseChar.x;
+                if (modalMode === 'add-child') {
+                    newGen = baseChar.generation + 1;
+                    newX += 0.5; // Slightly offset right
+                }
+                else if (modalMode === 'add-parent') {
+                    newGen = baseChar.generation - 1;
+                    newX += 0.5;
+                }
+                else if (modalMode === 'add-partner') {
+                    newGen = baseChar.generation; // Same generation
+                    newX += 1.2; // Next to partner
+                }
+             } else if (modalMode === 'add-root') {
+                 newGen = 1;
+                 newX = 0;
+             }
+
              const newChar: Character = {
                     id: newId, name: formData.name, title: formData.title, wikiSlug: formData.name.replace(/\s+/g, '_'),
-                    generation: 0, x: 0, house: 'targaryen', isKing: formData.isKing, isBastard: formData.isBastard, isNonCanon: formData.isNonCanon, isDragonRider: formData.isDragonRider, dragonName: formData.dragonName, isGap: formData.isGap,
+                    generation: newGen, x: newX, house: 'targaryen', isKing: formData.isKing, isBastard: formData.isBastard, isNonCanon: formData.isNonCanon, isDragonRider: formData.isDragonRider, dragonName: formData.dragonName, isGap: formData.isGap,
                     imageUrl: formData.imageUrl, wikiLink: formData.wikiLink, birthYear: formData.birthYear, deathYear: formData.deathYear, lore: formData.lore, status: formData.status as CharacterStatus
              };
 
              const targetHouseId = (formData.house === 'CREATE_NEW') ? formData.newHouseName.toLowerCase().replace(/\s+/g, '-') : formData.house;
-             newChar.house = targetHouseId; // Ensure house is set correctly
+             newChar.house = targetHouseId;
 
              setDatasets(prev => {
                 let nextDatasets = { ...prev };
@@ -652,9 +677,7 @@ export default function App() {
                 let updatedActiveHouse = activeHouse;
 
                 if (modalMode === 'add-root') {
-                     // For root, just add it. Layout might not do much with 1 node but good to be consistent
-                     const updatedChars = applyAutoLayout([...activeHouse.characters, newChar], activeHouse.connections);
-                     updatedActiveHouse = { ...activeHouse, characters: updatedChars };
+                     updatedActiveHouse = { ...activeHouse, characters: [...activeHouse.characters, newChar] };
                 } else {
                      updatedActiveHouse = updateFunction(activeHouse, newChar, modalMode!);
                 }
