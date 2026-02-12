@@ -381,6 +381,67 @@ export default function App() {
 
   const deleteCharacter = useCallback((id: string) => { setDeleteTargetId(id); setActiveMenu(null); }, []);
 
+  const handleUnlink = useCallback((targetId: string, role: 'parent' | 'child' | 'partner') => {
+      if (!selectedCharId) return;
+      const sourceId = selectedCharId;
+
+      setDatasets(prev => {
+          const next = { ...prev };
+          let changed = false;
+
+          Object.keys(next).forEach(houseId => {
+              const house = next[houseId];
+              let houseChanged = false;
+
+              const newConnections = house.connections.map(conn => {
+                  let newConn = { ...conn };
+                  let modified = false;
+
+                  // Partner: Remove target from parents if source is also a parent
+                  if (role === 'partner') {
+                      if (conn.parents.includes(sourceId) && conn.parents.includes(targetId)) {
+                          newConn.parents = conn.parents.filter(id => id !== targetId);
+                          modified = true;
+                      }
+                  }
+                  // Parent: Remove target from parents if source is a child
+                  else if (role === 'parent') {
+                      if (conn.parents.includes(targetId) && conn.children.includes(sourceId)) {
+                          newConn.parents = conn.parents.filter(id => id !== targetId);
+                          modified = true;
+                      }
+                  }
+                  // Child: Remove target from children if source is a parent
+                  else if (role === 'child') {
+                      if (conn.parents.includes(sourceId) && conn.children.includes(targetId)) {
+                          newConn.children = conn.children.filter(id => id !== targetId);
+                          modified = true;
+                      }
+                  }
+
+                  if (modified) {
+                      houseChanged = true;
+                      return newConn;
+                  }
+                  return conn;
+              }).filter(conn => {
+                  // Cleanup invalid connections
+                  if (conn.parents.length === 0) return false; // No parents
+                  if (conn.children.length === 0 && conn.parents.length < 2) return false; // Single parent no kids (useless line)
+                  return true;
+              });
+
+              if (houseChanged) {
+                 next[houseId] = { ...house, connections: newConnections };
+                 saveHouseToDb(next[houseId]);
+                 changed = true;
+              }
+          });
+
+          return changed ? next : prev;
+      });
+  }, [selectedCharId, setDatasets]);
+
   const executeDeleteCharacter = () => {
     if (!deleteTargetId) return;
     const id = deleteTargetId;
@@ -840,6 +901,7 @@ export default function App() {
         allCharacters={getAllCharacters()}
         datasets={datasets}
         selectedCharId={selectedCharId}
+        onUnlink={handleUnlink}
       />
 
       {deleteTargetId && <Modal isOpen={true} onClose={() => setDeleteTargetId(null)} title="Eliminar" accentClass="text-red-500"><div className="text-white mb-4">¿Eliminar personaje?</div><button onClick={executeDeleteCharacter} className="bg-red-600 text-white px-4 py-2 rounded w-full">Confirmar</button></Modal>}
