@@ -76,6 +76,36 @@ const ConnectionLines: React.FC<ConnectionLinesProps> = ({ characters, connectio
       };
   };
 
+  // Helper: Calculate path for inter-generational partners (Step Connector)
+  const getInterGenerationalMarriagePath = (p1: Character, p2: Character) => {
+      const older = p1.generation < p2.generation ? p1 : p2;
+      const younger = p1.generation < p2.generation ? p2 : p1;
+
+      const olderX = (older.x * X_SPACING) + CARD_WIDTH/2;
+      const olderBottomY = older.generation * Y_SPACING + CARD_HEIGHT;
+
+      const youngerX = (younger.x * X_SPACING) + CARD_WIDTH/2;
+      const youngerTopY = younger.generation * Y_SPACING;
+
+      // Calculate midpoint Y between the bottom of older and top of younger
+      const midY = olderBottomY + (youngerTopY - olderBottomY) / 2;
+
+      // Path: Older Bottom -> Down to MidY -> Horizontal to Younger X -> Down to Younger Top
+      const path = `
+          M ${olderX} ${olderBottomY}
+          V ${midY}
+          H ${youngerX}
+          V ${youngerTopY}
+      `;
+
+      // Dot position: Midpoint of horizontal segment
+      const dotX = (olderX + youngerX) / 2;
+      const dotY = midY;
+
+      return { path, dotX, dotY };
+  };
+
+
   return (
     <svg className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-visible filter drop-shadow-[0_0_2px_rgba(0,0,0,0.8)]">
       <defs>
@@ -92,11 +122,6 @@ const ConnectionLines: React.FC<ConnectionLinesProps> = ({ characters, connectio
 
         if (parents.length === 0) return null;
 
-        // Calculate center point for parents (X axis)
-        const parentX = parents.reduce((sum, p) => sum + (p.x * X_SPACING), 0) / parents.length + CARD_WIDTH/2;
-        // Standard bottom of the parent row
-        const parentBottomY = parents[0].generation * Y_SPACING + CARD_HEIGHT;
-
         // Determine if this connection group is highlighted
         const isHighlighted = hoveredNode && (
             conn.parents.includes(hoveredNode) ||
@@ -110,37 +135,66 @@ const ConnectionLines: React.FC<ConnectionLinesProps> = ({ characters, connectio
         const strokeColor = isHighlighted ? "#e4e4e7" : "#a1a1aa";
         const strokeWidth = isHighlighted ? 3 : 2;
 
+        let parentX = 0;
+        let parentBottomY = 0;
+        let isInterGenerational = false;
+
+        // Variables for Marriage Line Drawing
+        let marriagePathD = "";
+        let marriageDotX = 0;
+        let marriageDotY = 0;
+        let showMarriageLine = false;
+
+        if (parents.length > 1) {
+             showMarriageLine = true;
+             const p1 = parents[0];
+             const p2 = parents[1];
+             isInterGenerational = p1.generation !== p2.generation;
+
+             if (isInterGenerational) {
+                 const { path, dotX, dotY } = getInterGenerationalMarriagePath(p1, p2);
+                 marriagePathD = path;
+                 marriageDotX = dotX;
+                 marriageDotY = dotY;
+
+                 // Set Children Line Start
+                 parentX = dotX;
+                 parentBottomY = dotY;
+             } else {
+                 const p1Center = (p1.x * X_SPACING) + CARD_WIDTH/2;
+                 const p2Center = (p2.x * X_SPACING) + CARD_WIDTH/2;
+                 const isDistant = Math.abs(p1.x - p2.x) > DISTANT_PARTNER_THRESHOLD;
+                 const yCenter = p1.generation * Y_SPACING + CARD_HEIGHT/2;
+
+                 parentX = (p1Center + p2Center) / 2;
+                 parentBottomY = p1.generation * Y_SPACING + CARD_HEIGHT;
+
+                 marriageDotX = parentX;
+
+                 if (isDistant) {
+                     const { path, midY } = getDistantMarriagePath(p1Center, p2Center, p1.generation);
+                     marriagePathD = path;
+                     marriageDotY = midY;
+                 } else {
+                     marriagePathD = `M ${p1Center} ${yCenter} L ${p2Center} ${yCenter}`;
+                     marriageDotY = yCenter;
+                 }
+             }
+        } else {
+             // Single Parent
+             const p1 = parents[0];
+             parentX = (p1.x * X_SPACING) + CARD_WIDTH/2;
+             parentBottomY = p1.generation * Y_SPACING + CARD_HEIGHT;
+        }
+
         return (
           <g key={conn.id} style={{ opacity: groupOpacity, transition: 'opacity 0.3s ease' }}>
 
              {/* Parents Connector (Marriage Line) */}
-             {parents.length > 1 && (() => {
-               const p1 = parents[0];
-               const p2 = parents[1]; // We assume 2 parents for marriage lines usually
-
-               const p1Center = (p1.x * X_SPACING) + CARD_WIDTH/2;
-               const p2Center = (p2.x * X_SPACING) + CARD_WIDTH/2;
-
-               const isDistant = Math.abs(p1.x - p2.x) > DISTANT_PARTNER_THRESHOLD;
-
-               let pathD = "";
-               let marriageDotY = 0;
-
-               if (isDistant) {
-                   const { path, midY } = getDistantMarriagePath(p1Center, p2Center, p1.generation);
-                   pathD = path;
-                   marriageDotY = midY;
-               } else {
-                   // Standard straight line center-to-center
-                   const yCenter = p1.generation * Y_SPACING + CARD_HEIGHT/2;
-                   pathD = `M ${p1Center} ${yCenter} L ${p2Center} ${yCenter}`;
-                   marriageDotY = yCenter;
-               }
-
-               return (
+             {showMarriageLine && (
                  <>
                   <path
-                    d={pathD}
+                    d={marriagePathD}
                     stroke={strokeColor}
                     strokeWidth={strokeWidth}
                     strokeDasharray="4,4"
@@ -148,20 +202,21 @@ const ConnectionLines: React.FC<ConnectionLinesProps> = ({ characters, connectio
                   />
                   {/* Marriage Node Dot */}
                   <circle
-                      cx={parentX}
+                      cx={marriageDotX}
                       cy={marriageDotY}
                       r={isHighlighted ? MARRIAGE_DOT_RADIUS_HIGHLIGHT : MARRIAGE_DOT_RADIUS}
                       fill={strokeColor}
                   />
-                  {/* Vertical line from Marriage Node to Bottom of cards row (to start children lines) */}
-                   <path
-                      d={`M ${parentX} ${marriageDotY + (isDistant ? ARC_RADIUS : 0)} L ${parentX} ${parentBottomY}`}
-                      stroke={strokeColor}
-                      strokeWidth={strokeWidth}
-                  />
+                  {/* Vertical connector to children start point (only for standard same-gen) */}
+                  {!isInterGenerational && (
+                       <path
+                          d={`M ${parentX} ${marriageDotY + (marriagePathD.includes('Q') ? ARC_RADIUS : 0)} L ${parentX} ${parentBottomY}`}
+                          stroke={strokeColor}
+                          strokeWidth={strokeWidth}
+                      />
+                  )}
                  </>
-               );
-             })()}
+             )}
 
             {/* Children Lines */}
             {children.map(child => {
