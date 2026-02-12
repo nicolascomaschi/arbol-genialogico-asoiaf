@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@types/dagre": "^0.7.53",
+    "dagre": "^0.8.5",
     "firebase": "^10.7.1",
     "lucide-react": "^0.309.0",
     "react": "^18.2.0",

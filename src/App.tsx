@@ -4,7 +4,7 @@ import { signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'fi
 import { collection, doc, setDoc, onSnapshot } from 'firebase/firestore';
 
 import { auth, db } from './services/firebase';
-import { Character, HouseData, CharacterStatus } from './types';
+import { Character, HouseData, CharacterStatus, Connection } from './types';
 import { COLOR_THEMES } from './constants/theme';
 import { INITIAL_DATASETS } from './data/initialData';
 import {
@@ -283,12 +283,16 @@ export default function App() {
     );
   }, [datasets]);
 
+  const applyAutoLayout = (characters: Character[], connections: Connection[]) => {
+      return calculateAutoLayout(characters, connections);
+  };
+
   const handleAutoLayout = () => {
     setDatasets(prev => {
       const currentHouse = prev[activeTab];
       if (!currentHouse) return prev;
 
-      const newCharacters = calculateAutoLayout(currentHouse.characters, currentHouse.connections);
+      const newCharacters = applyAutoLayout(currentHouse.characters, currentHouse.connections);
       const updatedHouse = { ...currentHouse, characters: newCharacters };
       saveHouseToDb(updatedHouse);
 
@@ -393,7 +397,7 @@ export default function App() {
               const house = next[houseId];
               let houseChanged = false;
 
-              const newConnections = house.connections.map(conn => {
+              let newConnections = house.connections.map(conn => {
                   let newConn = { ...conn };
                   let modified = false;
 
@@ -432,7 +436,11 @@ export default function App() {
               });
 
               if (houseChanged) {
-                 next[houseId] = { ...house, connections: newConnections };
+                 // Trigger auto-layout after unlinking if the structure changed significantly?
+                 // For unlinking, maybe we just save. If user wants to re-layout, they can click the button.
+                 // Or we can enforce layout. Let's try enforcing layout for cleaner result.
+                 const newCharacters = applyAutoLayout(house.characters, newConnections);
+                 next[houseId] = { ...house, connections: newConnections, characters: newCharacters };
                  saveHouseToDb(next[houseId]);
                  changed = true;
               }
@@ -447,14 +455,19 @@ export default function App() {
     const id = deleteTargetId;
     setDatasets(prev => {
         const currentHouse = prev[activeTab];
-        const updatedHouse = {
-            ...currentHouse,
-            characters: currentHouse.characters.filter(c => c.id !== id),
-            connections: currentHouse.connections.map(conn => ({
+        const newConnections = currentHouse.connections.map(conn => ({
                 ...conn,
                 parents: conn.parents.filter(p => p !== id),
                 children: conn.children.filter(c => c !== id)
-            })).filter(conn => conn.parents.length > 0 || conn.children.length > 0)
+            })).filter(conn => conn.parents.length > 0 || conn.children.length > 0);
+
+        const remainingChars = currentHouse.characters.filter(c => c.id !== id);
+        const layoutedChars = applyAutoLayout(remainingChars, newConnections);
+
+        const updatedHouse = {
+            ...currentHouse,
+            characters: layoutedChars,
+            connections: newConnections
         };
         saveHouseToDb(updatedHouse);
         return { ...prev, [activeTab]: updatedHouse };
@@ -560,14 +573,8 @@ export default function App() {
                     const allChars = getAllCharacters();
                     const globalChar = allChars.find(c => c.id === targetId);
                     if (globalChar) {
-                        let newX = baseChar ? baseChar.x : 0;
-                        let newGen = globalChar.generation;
-                        if (baseChar) {
-                          if (mode === 'add-child') { newGen = baseChar.generation + 1; newX += 0.5; }
-                          else if (mode === 'add-parent') { newGen = baseChar.generation - 1; newX += 0.5; }
-                          else if (mode === 'add-partner') { newGen = baseChar.generation; newX += 1.2; }
-                        }
-                        updatedChars.push({ ...globalChar, x: newX, generation: newGen });
+                        // Position will be fixed by auto-layout
+                        updatedChars.push({ ...globalChar, x: 0, generation: 0 });
                     }
                 }
             }
@@ -605,6 +612,10 @@ export default function App() {
                    updatedConns.push({ id: `conn_${Date.now()}`, parents: [baseChar!.id, targetId], children: [] });
                }
             }
+
+            // Apply Auto-Layout
+            updatedChars = applyAutoLayout(updatedChars, updatedConns);
+
             return { ...currentHouse, characters: updatedChars, connections: updatedConns };
         };
 
@@ -616,15 +627,16 @@ export default function App() {
              });
         } else {
              const newId = `custom_${Date.now()}`;
-             let newGen = 1; let newX = 0;
-             if (baseChar) {
-                newGen = baseChar.generation; newX = baseChar.x;
-                if (modalMode === 'add-child') { newGen += 1; newX += 0.5; }
-                else if (modalMode === 'add-parent') { newGen -= 1; newX += 0.5; }
-                else if (modalMode === 'add-partner') { newX += 1.2; }
-             } else if (modalMode === 'add-root') { newGen = 1; newX = 0; }
-    
+             // Initial position, will be fixed by layout
+             const newChar: Character = {
+                    id: newId, name: formData.name, title: formData.title, wikiSlug: formData.name.replace(/\s+/g, '_'),
+                    generation: 0, x: 0, house: 'targaryen', isKing: formData.isKing, isBastard: formData.isBastard, isNonCanon: formData.isNonCanon, isDragonRider: formData.isDragonRider, dragonName: formData.dragonName, isGap: formData.isGap,
+                    imageUrl: formData.imageUrl, wikiLink: formData.wikiLink, birthYear: formData.birthYear, deathYear: formData.deathYear, lore: formData.lore, status: formData.status as CharacterStatus
+             };
+
              const targetHouseId = (formData.house === 'CREATE_NEW') ? formData.newHouseName.toLowerCase().replace(/\s+/g, '-') : formData.house;
+             newChar.house = targetHouseId; // Ensure house is set correctly
+
              setDatasets(prev => {
                 let nextDatasets = { ...prev };
                 if (formData.house === 'CREATE_NEW' && !nextDatasets[targetHouseId]) {
@@ -635,15 +647,14 @@ export default function App() {
                     };
                     nextDatasets[targetHouseId] = newHouseData;
                 }
-                const newChar: Character = {
-                    id: newId, name: formData.name, title: formData.title, wikiSlug: formData.name.replace(/\s+/g, '_'),
-                    generation: newGen, x: newX, house: targetHouseId, isKing: formData.isKing, isBastard: formData.isBastard, isNonCanon: formData.isNonCanon, isDragonRider: formData.isDragonRider, dragonName: formData.dragonName, isGap: formData.isGap,
-                    imageUrl: formData.imageUrl, wikiLink: formData.wikiLink, birthYear: formData.birthYear, deathYear: formData.deathYear, lore: formData.lore, status: formData.status as CharacterStatus
-                };
+
                 let activeHouse = nextDatasets[activeTab];
                 let updatedActiveHouse = activeHouse;
+
                 if (modalMode === 'add-root') {
-                     updatedActiveHouse = { ...activeHouse, characters: [...activeHouse.characters, newChar] };
+                     // For root, just add it. Layout might not do much with 1 node but good to be consistent
+                     const updatedChars = applyAutoLayout([...activeHouse.characters, newChar], activeHouse.connections);
+                     updatedActiveHouse = { ...activeHouse, characters: updatedChars };
                 } else {
                      updatedActiveHouse = updateFunction(activeHouse, newChar, modalMode!);
                 }
