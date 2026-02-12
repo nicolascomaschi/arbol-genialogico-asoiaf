@@ -25,6 +25,7 @@ interface CharacterModalProps {
   allCharacters: Character[];
   datasets: Record<string, HouseData>;
   selectedCharId: string | null;
+  onUnlink?: (targetId: string, role: 'parent' | 'child' | 'partner') => void;
 }
 
 const CharacterModal: React.FC<CharacterModalProps> = ({
@@ -41,9 +42,54 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
   setLinkCharId,
   allCharacters,
   datasets,
-  selectedCharId
+  selectedCharId,
+  onUnlink
 }) => {
   if (!mode) return null;
+
+  // Compute relationships for "edit" mode
+  const relationships = React.useMemo(() => {
+    if (mode !== 'edit' || !selectedCharId) return null;
+
+    const rels = {
+      parents: [] as Character[],
+      partners: [] as Character[],
+      children: [] as Character[]
+    };
+
+    // Iterate through all houses to find connections involving this character
+    Object.values(datasets).forEach(house => {
+      house.connections.forEach(conn => {
+        const isParent = conn.parents.includes(selectedCharId);
+        const isChild = conn.children.includes(selectedCharId);
+
+        if (isParent) {
+           // As a parent, my partners are the other parents
+           conn.parents.forEach(pId => {
+             if (pId !== selectedCharId) {
+               const p = allCharacters.find(c => c.id === pId);
+               if (p && !rels.partners.some(x => x.id === p.id)) rels.partners.push(p);
+             }
+           });
+           // As a parent, my children are in conn.children
+           conn.children.forEach(cId => {
+             const c = allCharacters.find(ch => ch.id === cId);
+             if (c && !rels.children.some(x => x.id === c.id)) rels.children.push(c);
+           });
+        }
+
+        if (isChild) {
+           // As a child, my parents are in conn.parents
+           conn.parents.forEach(pId => {
+             const p = allCharacters.find(c => c.id === pId);
+             if (p && !rels.parents.some(x => x.id === p.id)) rels.parents.push(p);
+           });
+        }
+      });
+    });
+
+    return rels;
+  }, [mode, selectedCharId, datasets, allCharacters]);
 
   return (
       <Modal isOpen={isOpen} onClose={onClose} title="Personaje" accentClass={themeConfig.accentColor}>
@@ -154,6 +200,56 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
                     <button type="button" onClick={(e) => { e.preventDefault(); setIsLinkingExisting(false); }} className={`flex-1 text-xs py-1.5 rounded-md ${!isLinkingExisting ? 'bg-zinc-800 text-white' : 'text-zinc-500'}`}>Crear Nuevo</button>
                     <button type="button" onClick={(e) => { e.preventDefault(); setIsLinkingExisting(true); }} className={`flex-1 text-xs py-1.5 rounded-md ${isLinkingExisting ? 'bg-zinc-800 text-white' : 'text-zinc-500'}`}>Vincular Existente</button>
                  </div>
+            )}
+
+            {mode === 'edit' && relationships && onUnlink && (
+              <div className="mt-4 border-t border-zinc-800 pt-4">
+                <h4 className="text-xs font-bold text-zinc-500 uppercase mb-3">Relaciones</h4>
+                <div className="flex flex-col gap-4">
+                   {/* PARENTS */}
+                   {relationships.parents.length > 0 && (
+                      <div>
+                        <span className="text-[10px] text-zinc-400 font-bold block mb-1">PADRES</span>
+                        <div className="flex flex-wrap gap-2">
+                           {relationships.parents.map(p => (
+                             <div key={p.id} className="flex items-center gap-2 bg-zinc-800 px-2 py-1 rounded border border-zinc-700">
+                                <span className="text-xs text-zinc-200">{p.name}</span>
+                                <button type="button" onClick={() => onUnlink(p.id, 'parent')} className="text-zinc-500 hover:text-red-400 transition-colors">x</button>
+                             </div>
+                           ))}
+                        </div>
+                      </div>
+                   )}
+                   {/* PARTNERS */}
+                   {relationships.partners.length > 0 && (
+                      <div>
+                        <span className="text-[10px] text-zinc-400 font-bold block mb-1">PAREJAS</span>
+                        <div className="flex flex-wrap gap-2">
+                           {relationships.partners.map(p => (
+                             <div key={p.id} className="flex items-center gap-2 bg-zinc-800 px-2 py-1 rounded border border-zinc-700">
+                                <span className="text-xs text-zinc-200">{p.name}</span>
+                                <button type="button" onClick={() => onUnlink(p.id, 'partner')} className="text-zinc-500 hover:text-red-400 transition-colors">x</button>
+                             </div>
+                           ))}
+                        </div>
+                      </div>
+                   )}
+                   {/* CHILDREN */}
+                   {relationships.children.length > 0 && (
+                      <div>
+                        <span className="text-[10px] text-zinc-400 font-bold block mb-1">HIJOS</span>
+                        <div className="flex flex-wrap gap-2">
+                           {relationships.children.map(p => (
+                             <div key={p.id} className="flex items-center gap-2 bg-zinc-800 px-2 py-1 rounded border border-zinc-700">
+                                <span className="text-xs text-zinc-200">{p.name}</span>
+                                <button type="button" onClick={() => onUnlink(p.id, 'child')} className="text-zinc-500 hover:text-red-400 transition-colors">x</button>
+                             </div>
+                           ))}
+                        </div>
+                      </div>
+                   )}
+                </div>
+              </div>
             )}
 
             <div className="flex justify-end pt-4"><button type="submit" className="bg-white text-black px-4 py-2 rounded font-bold">Guardar</button></div>
