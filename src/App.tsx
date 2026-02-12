@@ -112,20 +112,18 @@ export default function App() {
 
   const visibleConnections = useMemo(() => {
       return connections.filter(conn => {
-          // Hide connection if any child is hidden or ALL parents are hidden (though usually if parent is hidden, child is too)
-          // Simplest: if any participant is hidden, the connection line might look weird.
-          // Correct logic: If a child is hidden, don't show the link to them.
-          // If a parent is hidden... well if parent is hidden, child is likely hidden too.
-          // Let's filter out children from the connection object for rendering purposes?
-          // No, ConnectionLines expects full connection objects.
-          // Better: Filter connections where ALL children are hidden.
+          // Check visible participants
           const visibleChildren = conn.children.filter(c => !hiddenNodes.has(c));
-          if (visibleChildren.length === 0) return false;
+          const visibleParents = conn.parents.filter(p => !hiddenNodes.has(p));
 
-          // Also check parents. If all parents are hidden, usually children are hidden too.
-          // But if intermarriage...
-          // Let's just rely on the fact that if a node is hidden, we don't render it.
-          return true;
+          // Show connection if:
+          // 1. There is at least one visible child.
+          // 2. OR there are visible parents (more than 1 parent usually means a partner connection, which we want to show even if no children).
+
+          if (visibleChildren.length > 0) return true;
+          if (visibleParents.length > 1) return true;
+
+          return false;
       });
   }, [connections, hiddenNodes]);
 
