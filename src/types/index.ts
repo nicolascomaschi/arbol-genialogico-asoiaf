@@ -12,6 +12,7 @@ export type Character = {
   isBastard?: boolean;
   isNonCanon?: boolean;
   isDragonRider?: boolean;
+  isDisputed?: boolean; // Added back
   dragonName?: string;
   isGap?: boolean;
   house?: string;

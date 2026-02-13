@@ -5,7 +5,7 @@ import { Character, CharacterStatus, HouseData, ThemeConfig } from '../types';
 import { COLOR_THEMES } from '../constants/theme';
 
 interface CharacterFormState {
-  name: string; title: string; house: string; isKing: boolean; isBastard: boolean; isNonCanon: boolean; isDragonRider: boolean; dragonName: string; isGap: boolean; imageUrl: string; wikiLink: string;
+  name: string; title: string; house: string; isKing: boolean; isBastard: boolean; isNonCanon: boolean; isDragonRider: boolean; isDisputed?: boolean; dragonName: string; isGap: boolean; imageUrl: string; wikiLink: string;
   birthYear: string; deathYear: string; lore: string; status: CharacterStatus | string;
   newHouseName: string; newHouseColor: string; newHouseCustomColor: string;
 }
@@ -122,6 +122,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
                 <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" checked={formData.isKing} onChange={e => setFormData({...formData, isKing: e.target.checked})} /> <span className="text-xs">Monarca</span></label>
                 <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" checked={formData.isBastard} onChange={e => setFormData({...formData, isBastard: e.target.checked})} /> <span className="text-xs">Bastardo</span></label>
                 <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" checked={formData.isNonCanon} onChange={e => setFormData({...formData, isNonCanon: e.target.checked})} /> <span className="text-xs">No Canon</span></label>
+                <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" checked={formData.isDisputed} onChange={e => setFormData({...formData, isDisputed: e.target.checked})} /> <span className="text-xs">Paternidad Disputada</span></label>
                 <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" checked={formData.isDragonRider} onChange={e => setFormData({...formData, isDragonRider: e.target.checked})} /> <span className="text-xs">Jinete Dragón</span></label>
                 {formData.isDragonRider && (
                     <input

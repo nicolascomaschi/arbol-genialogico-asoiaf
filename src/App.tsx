@@ -180,11 +180,11 @@ export default function App() {
   const [selectedCharId, setSelectedCharId] = useState<string | null>(null);
   
   const [formData, setFormData] = useState<{
-    name: string; title: string; house: string; isKing: boolean; isBastard: boolean; isNonCanon: boolean; isDragonRider: boolean; dragonName: string; isGap: boolean; imageUrl: string; wikiLink: string;
+    name: string; title: string; house: string; isKing: boolean; isBastard: boolean; isNonCanon: boolean; isDragonRider: boolean; isDisputed?: boolean; dragonName: string; isGap: boolean; imageUrl: string; wikiLink: string;
     birthYear: string; deathYear: string; lore: string; status: CharacterStatus | string;
     newHouseName: string; newHouseColor: string; newHouseCustomColor: string;
   }>({ 
-    name: '', title: '', house: 'targaryen', isKing: false, isBastard: false, isNonCanon: false, isDragonRider: false, dragonName: '', isGap: false, imageUrl: '', wikiLink: '',
+    name: '', title: '', house: 'targaryen', isKing: false, isBastard: false, isNonCanon: false, isDragonRider: false, isDisputed: false, dragonName: '', isGap: false, imageUrl: '', wikiLink: '',
     birthYear: '', deathYear: '', lore: '', status: 'alive',
     newHouseName: '', newHouseColor: 'black', newHouseCustomColor: ''
   });
@@ -549,7 +549,7 @@ export default function App() {
                 ...currentHouse,
                 characters: currentHouse.characters.map(c => c.id === selectedCharId ? { 
                     ...c, name: formData.name, title: formData.title, house: targetHouseId, 
-                    isKing: formData.isKing, isBastard: formData.isBastard, isNonCanon: formData.isNonCanon, isDragonRider: formData.isDragonRider, dragonName: formData.dragonName, isGap: formData.isGap,
+                    isKing: formData.isKing, isBastard: formData.isBastard, isNonCanon: formData.isNonCanon, isDragonRider: formData.isDragonRider, isDisputed: formData.isDisputed, dragonName: formData.dragonName, isGap: formData.isGap,
                     imageUrl: formData.imageUrl, wikiLink: formData.wikiLink, birthYear: formData.birthYear, deathYear: formData.deathYear, lore: formData.lore, status: formData.status as CharacterStatus
                 } : c)
             };
@@ -655,7 +655,7 @@ export default function App() {
 
              const newChar: Character = {
                     id: newId, name: formData.name, title: formData.title, wikiSlug: formData.name.replace(/\s+/g, '_'),
-                    generation: newGen, x: newX, house: 'targaryen', isKing: formData.isKing, isBastard: formData.isBastard, isNonCanon: formData.isNonCanon, isDragonRider: formData.isDragonRider, dragonName: formData.dragonName, isGap: formData.isGap,
+                    generation: newGen, x: newX, house: 'targaryen', isKing: formData.isKing, isBastard: formData.isBastard, isNonCanon: formData.isNonCanon, isDragonRider: formData.isDragonRider, isDisputed: formData.isDisputed, dragonName: formData.dragonName, isGap: formData.isGap,
                     imageUrl: formData.imageUrl, wikiLink: formData.wikiLink, birthYear: formData.birthYear, deathYear: formData.deathYear, lore: formData.lore, status: formData.status as CharacterStatus
              };
 
@@ -731,19 +731,19 @@ export default function App() {
   const openModalWrapper = useCallback((mode: typeof modalMode, charId: string) => {
     setModalMode(mode); setSelectedCharId(charId); setIsLinkingExisting(false); setLinkCharId('');
     if (mode === 'add-root') {
-         setFormData({ name: '', title: '', house: activeTab, isKing: false, isBastard: false, isNonCanon: false, isDragonRider: false, dragonName: '', isGap: false, imageUrl: '', wikiLink: '', birthYear: '', deathYear: '', lore: '', status: 'alive', newHouseName: '', newHouseColor: 'black', newHouseCustomColor: '' });
+         setFormData({ name: '', title: '', house: activeTab, isKing: false, isBastard: false, isNonCanon: false, isDragonRider: false, isDisputed: false, dragonName: '', isGap: false, imageUrl: '', wikiLink: '', birthYear: '', deathYear: '', lore: '', status: 'alive', newHouseName: '', newHouseColor: 'black', newHouseCustomColor: '' });
          return;
     }
     const char = characters.find(c => c.id === charId);
     if (mode === 'edit' && char) {
         setFormData({ 
             name: char.name, title: char.title, house: char.house || activeTab, 
-            isKing: !!char.isKing, isBastard: !!char.isBastard, isNonCanon: !!char.isNonCanon, isDragonRider: !!char.isDragonRider, dragonName: char.dragonName || '', isGap: !!char.isGap,
+            isKing: !!char.isKing, isBastard: !!char.isBastard, isNonCanon: !!char.isNonCanon, isDragonRider: !!char.isDragonRider, isDisputed: !!char.isDisputed, dragonName: char.dragonName || '', isGap: !!char.isGap,
             imageUrl: char.imageUrl || '', wikiLink: char.wikiLink || '', birthYear: char.birthYear || '', deathYear: char.deathYear || '', lore: char.lore || '', status: char.status || 'alive',
             newHouseName: '', newHouseColor: 'black', newHouseCustomColor: ''
         });
     } else {
-        setFormData({ name: '', title: '', house: activeTab, isKing: false, isBastard: false, isNonCanon: false, isDragonRider: false, dragonName: '', isGap: false, imageUrl: '', wikiLink: '', birthYear: '', deathYear: '', lore: '', status: 'alive', newHouseName: '', newHouseColor: 'black', newHouseCustomColor: '' });
+        setFormData({ name: '', title: '', house: activeTab, isKing: false, isBastard: false, isNonCanon: false, isDragonRider: false, isDisputed: false, dragonName: '', isGap: false, imageUrl: '', wikiLink: '', birthYear: '', deathYear: '', lore: '', status: 'alive', newHouseName: '', newHouseColor: 'black', newHouseCustomColor: '' });
     }
     setActiveMenu(null);
   }, [activeTab, characters, activeMenu]);
