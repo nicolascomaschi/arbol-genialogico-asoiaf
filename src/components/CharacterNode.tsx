@@ -2,7 +2,7 @@ import React, { memo } from 'react';
 import {
   GitCommit, MoreVertical, User, Crown, Flame, Ban, AlertTriangle,
   Skull, HelpCircle, Ghost, BookOpen, LogOut, Edit2, Plus, UserPlus,
-  HeartPulse, Trash2, Minus
+  HeartPulse, Trash2, Minus, Eye
 } from 'lucide-react';
 import { Character, ThemeConfig } from '../types';
 import { GAP_NODE_SIZE, CARD_WIDTH, CARD_HEIGHT, X_SPACING, Y_SPACING } from '../constants/config';
@@ -96,6 +96,7 @@ const CharacterNode: React.FC<CharacterNodeProps> = ({
                   {char.isKing && <div title="Monarca"><Crown size={14} className="text-yellow-500 drop-shadow-md"/></div>}
                   {char.isDragonRider && <div title={`Jinete de ${char.dragonName || 'Dragón'}`}><Flame size={14} className="text-orange-500 drop-shadow-md"/></div>}
                   {char.isBastard && <div title="Bastardo"><Ban size={14} className="text-zinc-400 drop-shadow-md"/></div>}
+                  {char.isDisputed && <div title="Paternidad Disputada"><Eye size={14} className="text-cyan-400 drop-shadow-md"/></div>}
                   {char.isNonCanon && <div title="No Canon"><AlertTriangle size={14} className="text-amber-500 drop-shadow-md"/></div>}
                   {char.status === 'dead' && <div title="Fallecido"><Skull size={14} className="text-zinc-500"/></div>}
                   {char.status === 'missing' && <div title="Desaparecido"><HelpCircle size={14} className="text-amber-500"/></div>}
