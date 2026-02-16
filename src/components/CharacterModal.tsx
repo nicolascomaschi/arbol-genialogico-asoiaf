@@ -54,10 +54,11 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
     }
   }, [isOpen, mode, isLinkingExisting]);
 
-  if (!mode) return null;
-
   // Filter characters based on search query
   const filteredCharacters = React.useMemo(() => {
+      // Guard against potential undefined allCharacters if that ever happens (though typing says it's array)
+      if (!allCharacters) return [];
+
       let chars = allCharacters.filter(c => c.id !== selectedCharId);
       if (searchQuery.trim()) {
           const query = searchQuery.toLowerCase();
@@ -112,6 +113,8 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
 
     return rels;
   }, [mode, selectedCharId, datasets, allCharacters]);
+
+  if (!mode) return null;
 
   return (
       <Modal isOpen={isOpen} onClose={onClose} title="Personaje" accentClass={themeConfig.accentColor}>
