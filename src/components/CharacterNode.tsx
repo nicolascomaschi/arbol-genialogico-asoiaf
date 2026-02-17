@@ -92,7 +92,7 @@ const CharacterNode: React.FC<CharacterNodeProps> = ({
 
                   {/* Artist Tooltip */}
                   {char.artistName && (
-                      <div className={`absolute top-2 right-2 bg-black/80 backdrop-blur-sm px-2 py-1 rounded text-[10px] text-zinc-300 opacity-0 group-hover/image:opacity-100 transition-opacity duration-200 border border-zinc-700 pointer-events-auto flex items-center gap-1 z-30 ${char.artistLink ? 'hover:text-white hover:border-zinc-500 cursor-pointer' : ''}`}
+                      <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/80 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs text-zinc-200 opacity-0 group-hover/image:opacity-100 transition-all duration-300 border border-zinc-600 pointer-events-auto flex items-center gap-2 z-30 shadow-xl scale-90 group-hover/image:scale-100 ${char.artistLink ? 'hover:bg-zinc-900 hover:border-zinc-400 hover:text-white cursor-pointer' : ''}`}
                            onClick={(e) => {
                                if (char.artistLink) {
                                    e.stopPropagation();
@@ -101,8 +101,8 @@ const CharacterNode: React.FC<CharacterNodeProps> = ({
                            }}
                            title={char.artistLink ? "Ver artista" : undefined}
                       >
-                          <PenTool size={10} />
-                          <span className="font-medium truncate max-w-[100px]">{char.artistName}</span>
+                          <PenTool size={12} />
+                          <span className="font-medium truncate max-w-[120px]">{char.artistName}</span>
                       </div>
                   )}
               </div>
