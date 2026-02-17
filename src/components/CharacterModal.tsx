@@ -5,7 +5,7 @@ import { Character, CharacterStatus, HouseData, ThemeConfig } from '../types';
 import { COLOR_THEMES } from '../constants/theme';
 
 interface CharacterFormState {
-  name: string; title: string; house: string; isKing: boolean; isBastard: boolean; isNonCanon: boolean; isDragonRider: boolean; isDisputed?: boolean; dragonName: string; isGap: boolean; imageUrl: string; wikiLink: string;
+  name: string; title: string; house: string; isKing: boolean; isBastard: boolean; isNonCanon: boolean; isDragonRider: boolean; isDisputed?: boolean; disputedParentageLore?: string; dragonName: string; isGap: boolean; imageUrl: string; wikiLink: string;
   birthYear: string; deathYear: string; lore: string; status: CharacterStatus | string;
   newHouseName: string; newHouseColor: string; newHouseCustomColor: string;
   artistName?: string; // New field
@@ -166,6 +166,14 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
                 )}
                 <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" checked={formData.isGap} onChange={e => setFormData({...formData, isGap: e.target.checked})} /> <span className="text-xs">Gap</span></label>
             </div>
+            {formData.isDisputed && (
+                <textarea
+                    placeholder="Descripción de Paternidad Disputada..."
+                    className="bg-zinc-900 border border-zinc-700 rounded p-2 text-white h-16 text-xs"
+                    value={formData.disputedParentageLore || ''}
+                    onChange={e => setFormData({...formData, disputedParentageLore: e.target.value})}
+                />
+            )}
             {formData.house === 'CREATE_NEW' && (
                 <div className="p-4 bg-emerald-950/20 border border-emerald-900/50 rounded-lg animate-in fade-in slide-in-from-top-2">
                      <h4 className="text-xs font-bold text-emerald-400 mb-3 flex items-center gap-2 uppercase tracking-wide"><Plus size={12}/> Fundar Casa (Rápido)</h4>
