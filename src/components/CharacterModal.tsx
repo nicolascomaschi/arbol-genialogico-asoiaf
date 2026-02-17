@@ -8,6 +8,8 @@ interface CharacterFormState {
   name: string; title: string; house: string; isKing: boolean; isBastard: boolean; isNonCanon: boolean; isDragonRider: boolean; isDisputed?: boolean; dragonName: string; isGap: boolean; imageUrl: string; wikiLink: string;
   birthYear: string; deathYear: string; lore: string; status: CharacterStatus | string;
   newHouseName: string; newHouseColor: string; newHouseCustomColor: string;
+  artistName?: string; // New field
+  artistLink?: string; // New field
 }
 
 interface CharacterModalProps {
@@ -122,6 +124,10 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
             <input type="text" placeholder="Nombre" className="bg-zinc-900 border border-zinc-700 rounded p-2 text-white" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required={!isLinkingExisting} />
             <input type="text" placeholder="Título" className="bg-zinc-900 border border-zinc-700 rounded p-2 text-white" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
             <input type="url" placeholder="URL Imagen" className="bg-zinc-900 border border-zinc-700 rounded p-2 text-white" value={formData.imageUrl} onChange={e => setFormData({...formData, imageUrl: e.target.value})} />
+            <div className="flex gap-2">
+                <input type="text" placeholder="Nombre del Ilustrador" className="bg-zinc-900 border border-zinc-700 rounded p-2 text-white flex-1" value={formData.artistName || ''} onChange={e => setFormData({...formData, artistName: e.target.value})} />
+                <input type="url" placeholder="Link del Ilustrador" className="bg-zinc-900 border border-zinc-700 rounded p-2 text-white flex-1" value={formData.artistLink || ''} onChange={e => setFormData({...formData, artistLink: e.target.value})} />
+            </div>
             <input type="url" placeholder="URL Wiki (Lore)" className="bg-zinc-900 border border-zinc-700 rounded p-2 text-white" value={formData.wikiLink} onChange={e => setFormData({...formData, wikiLink: e.target.value})} />
             <div className="flex gap-2">
                 <input type="text" placeholder="Nacimiento" className="bg-zinc-900 border border-zinc-700 rounded p-2 text-white flex-1" value={formData.birthYear} onChange={e => setFormData({...formData, birthYear: e.target.value})} />

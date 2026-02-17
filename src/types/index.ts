@@ -6,13 +6,15 @@ export type Character = {
   title: string;
   wikiSlug: string;
   imageUrl?: string;
+  artistName?: string; // New field
+  artistLink?: string; // New field
   generation: number;
   x: number;
   isKing?: boolean;
   isBastard?: boolean;
   isNonCanon?: boolean;
   isDragonRider?: boolean;
-  isDisputed?: boolean; // Added back
+  isDisputed?: boolean;
   dragonName?: string;
   isGap?: boolean;
   house?: string;
