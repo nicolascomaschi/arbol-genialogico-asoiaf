@@ -2,7 +2,7 @@ import React, { memo } from 'react';
 import {
   GitCommit, MoreVertical, User, Crown, Flame, Ban, AlertTriangle,
   Skull, HelpCircle, Ghost, BookOpen, LogOut, Edit2, Plus, UserPlus,
-  HeartPulse, Trash2, Minus, Eye
+  HeartPulse, Trash2, Minus, EyeOff, PenTool
 } from 'lucide-react';
 import { Character, ThemeConfig } from '../types';
 import { GAP_NODE_SIZE, CARD_WIDTH, CARD_HEIGHT, X_SPACING, Y_SPACING } from '../constants/config';
@@ -86,9 +86,25 @@ const CharacterNode: React.FC<CharacterNodeProps> = ({
       ) : (
           <>
               {/* --- IMAGEN DE FONDO COMPLETA (Con overflow-hidden) --- */}
-              <div className="absolute inset-0 z-0 overflow-hidden rounded-xl">
+              <div className="absolute inset-0 z-0 overflow-hidden rounded-xl group/image">
                   {char.imageUrl ? <img src={char.imageUrl} alt={char.name} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-500" /> : <div className="w-full h-full flex items-center justify-center bg-zinc-800 text-zinc-700"><User size={64} strokeWidth={1}/></div>}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"/>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none"/>
+
+                  {/* Artist Tooltip */}
+                  {char.artistName && (
+                      <div className={`absolute top-2 right-2 bg-black/80 backdrop-blur-sm px-2 py-1 rounded text-[10px] text-zinc-300 opacity-0 group-hover/image:opacity-100 transition-opacity duration-200 border border-zinc-700 pointer-events-auto flex items-center gap-1 z-30 ${char.artistLink ? 'hover:text-white hover:border-zinc-500 cursor-pointer' : ''}`}
+                           onClick={(e) => {
+                               if (char.artistLink) {
+                                   e.stopPropagation();
+                                   window.open(char.artistLink, '_blank', 'noopener,noreferrer');
+                               }
+                           }}
+                           title={char.artistLink ? "Ver artista" : undefined}
+                      >
+                          <PenTool size={10} />
+                          <span className="font-medium truncate max-w-[100px]">{char.artistName}</span>
+                      </div>
+                  )}
               </div>
 
               {/* --- ICONOS DE ESTADO (Bottom Right Vertical) --- */}
@@ -96,7 +112,14 @@ const CharacterNode: React.FC<CharacterNodeProps> = ({
                   {char.isKing && <div title="Monarca"><Crown size={14} className="text-yellow-500 drop-shadow-md"/></div>}
                   {char.isDragonRider && <div title={`Jinete de ${char.dragonName || 'Dragón'}`}><Flame size={14} className="text-orange-500 drop-shadow-md"/></div>}
                   {char.isBastard && <div title="Bastardo"><Ban size={14} className="text-zinc-400 drop-shadow-md"/></div>}
-                  {char.isDisputed && <div title="Paternidad Disputada"><Eye size={14} className="text-cyan-400 drop-shadow-md"/></div>}
+                  {char.isDisputed && (
+                      <div className="group/disputed relative">
+                          <EyeOff size={14} className="text-cyan-400 drop-shadow-md cursor-help"/>
+                          <div className="absolute right-6 top-1/2 -translate-y-1/2 w-48 bg-zinc-950 border border-zinc-700 p-2 rounded text-xs text-zinc-300 shadow-xl opacity-0 group-hover/disputed:opacity-100 pointer-events-none transition-opacity font-lato z-50 text-right">
+                              {char.disputedParentageLore || "Paternidad Disputada"}
+                          </div>
+                      </div>
+                  )}
                   {char.isNonCanon && <div title="No Canon"><AlertTriangle size={14} className="text-amber-500 drop-shadow-md"/></div>}
                   {char.status === 'dead' && <div title="Fallecido"><Skull size={14} className="text-zinc-500"/></div>}
                   {char.status === 'missing' && <div title="Desaparecido"><HelpCircle size={14} className="text-amber-500"/></div>}
@@ -127,7 +150,7 @@ const CharacterNode: React.FC<CharacterNodeProps> = ({
               )}
 
               {/* --- TEXTO (Sobrepuesto abajo) --- */}
-              <div className="absolute bottom-0 left-0 w-full p-4 z-10 bg-gradient-to-t from-black/90 to-transparent pt-8 rounded-b-xl">
+              <div className="absolute bottom-0 left-0 w-full p-4 z-10 bg-gradient-to-t from-black/90 to-transparent pt-8 rounded-b-xl pointer-events-none">
                   <h3 className={`font-cinzel font-bold text-lg leading-tight text-white drop-shadow-md ${char.isNonCanon ? 'italic text-amber-200' : ''}`}>{char.name}</h3>
                   <p className="text-xs text-zinc-400 italic font-lato whitespace-pre-wrap leading-tight">{char.title}</p>
                   {(char.birthYear || char.deathYear) && <div className="text-[10px] text-zinc-500 mt-1 font-mono">{char.birthYear || '?'} - {char.deathYear || '?'}</div>}
