@@ -2,7 +2,7 @@ import React, { memo } from 'react';
 import {
   GitCommit, MoreVertical, User, Crown, Flame, Ban, AlertTriangle,
   Skull, HelpCircle, Ghost, BookOpen, LogOut, Edit2, Plus, UserPlus,
-  HeartPulse, Trash2, Minus, EyeOff, PenTool
+  HeartPulse, Trash2, Minus, EyeOff, PenTool, Calendar
 } from 'lucide-react';
 import { Character, ThemeConfig } from '../types';
 import { GAP_NODE_SIZE, CARD_WIDTH, CARD_HEIGHT, X_SPACING, Y_SPACING } from '../constants/config';
@@ -50,6 +50,9 @@ const CharacterNode: React.FC<CharacterNodeProps> = ({
   toggleCollapse,
   hasChildren
 }) => {
+  // Check if dates are unknown/missing
+  const hasUnknownDates = !char.birthYear && !char.deathYear;
+
   return (
     <div
       className={`absolute rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.8)] group transition-all duration-300
@@ -120,6 +123,11 @@ const CharacterNode: React.FC<CharacterNodeProps> = ({
                           </div>
                       </div>
                   )}
+                  {hasUnknownDates && (
+                      <div title="Fechas desconocidas">
+                          <Calendar size={14} className="text-zinc-600 drop-shadow-md opacity-60"/>
+                      </div>
+                  )}
                   {char.isNonCanon && <div title="No Canon"><AlertTriangle size={14} className="text-amber-500 drop-shadow-md"/></div>}
                   {char.status === 'dead' && <div title="Fallecido"><Skull size={14} className="text-zinc-500"/></div>}
                   {char.status === 'missing' && <div title="Desaparecido"><HelpCircle size={14} className="text-amber-500"/></div>}
@@ -153,7 +161,11 @@ const CharacterNode: React.FC<CharacterNodeProps> = ({
               <div className="absolute bottom-0 left-0 w-full p-4 z-10 bg-gradient-to-t from-black/90 to-transparent pt-8 rounded-b-xl pointer-events-none">
                   <h3 className={`font-cinzel font-bold text-lg leading-tight text-white drop-shadow-md ${char.isNonCanon ? 'italic text-amber-200' : ''}`}>{char.name}</h3>
                   <p className="text-xs text-zinc-400 italic font-lato whitespace-pre-wrap leading-tight">{char.title}</p>
-                  {(char.birthYear || char.deathYear) && <div className="text-[10px] text-zinc-500 mt-1 font-mono">{char.birthYear || '?'} - {char.deathYear || '?'}</div>}
+                  {(char.birthYear || char.deathYear) ? (
+                      <div className="text-[10px] text-zinc-500 mt-1 font-mono">{char.birthYear || '?'} - {char.deathYear || '?'}</div>
+                  ) : (
+                      <div className="text-[10px] text-zinc-600 mt-1 font-mono italic">Fechas desconocidas</div>
+                  )}
               </div>
 
               {/* --- COLLAPSE BUTTON --- */}

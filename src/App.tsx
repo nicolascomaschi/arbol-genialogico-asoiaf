@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { HelpCircle, Move, RotateCcw, RotateCw, Wand2 } from 'lucide-react';
 import { signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
-import { collection, doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { collection, doc, setDoc, onSnapshot, deleteDoc } from 'firebase/firestore';
 
 import { auth, db } from './services/firebase';
-import { Character, HouseData, CharacterStatus, Connection } from './types';
+import { Character, HouseData, CharacterStatus, Connection, TimelineEvent } from './types';
 import { COLOR_THEMES } from './constants/theme';
 import { INITIAL_DATASETS } from './data/initialData';
 import {
@@ -22,6 +22,7 @@ import LegendModal from './components/LegendModal';
 import HouseModal from './components/HouseModal';
 import CharacterModal from './components/CharacterModal';
 import Modal from './components/Modal';
+import TimelineEventModal from './components/TimelineEventModal';
 
 // --- COMPONENTE PRINCIPAL (APP) ---
 
@@ -62,6 +63,10 @@ export default function App() {
   const [showKings, setShowKings] = useState(false);
   const [collapsedNodes, setCollapsedNodes] = useState<Set<string>>(new Set());
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+
+  // Timeline Events
+  const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
+  const [isTimelineManagerOpen, setIsTimelineManagerOpen] = useState(false);
 
   // Fallback Logic
   const currentData = datasets[activeTab] || INITIAL_DATASETS.targaryen;
@@ -162,7 +167,11 @@ export default function App() {
     if (timelineYear !== null) {
         const birth = parseYear(char.birthYear);
         const death = parseYear(char.deathYear);
+
+        // If birth is known and greater than current year, dim it (not born yet)
         if (birth !== null && birth > timelineYear) return true;
+
+        // If death is known and less than current year, dim it (already dead)
         if (death !== null && death < timelineYear) return true;
     }
     return false;
@@ -221,7 +230,7 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // DATA SYNC
+  // DATA SYNC HOUSES
   useEffect(() => {
     if (!user || !db) return;
     const housesRef = collection(db, 'artifacts', APP_ID, 'users', user.uid, 'houses');
@@ -236,7 +245,6 @@ export default function App() {
         });
 
         // Only update if data has actually changed to avoid clearing undo history unnecessarily
-        // This handles the case where the server confirms our own write (which we already have)
         const merged = { ...datasetsRef.current, ...loadedDatasets };
         if (JSON.stringify(merged) !== JSON.stringify(datasetsRef.current)) {
             resetDatasets(merged);
@@ -245,6 +253,38 @@ export default function App() {
     });
     return () => unsubscribe();
   }, [user, resetDatasets]);
+
+  // DATA SYNC EVENTS
+  useEffect(() => {
+    if (!user || !db) return;
+    const eventsRef = collection(db, 'artifacts', APP_ID, 'users', user.uid, 'timeline_events');
+    const unsubscribe = onSnapshot(eventsRef, (snapshot) => {
+      const events: TimelineEvent[] = [];
+      snapshot.forEach(doc => {
+          events.push(doc.data() as TimelineEvent);
+      });
+      setTimelineEvents(events);
+    });
+    return () => unsubscribe();
+  }, [user]);
+
+  const saveEventToDb = async (event: TimelineEvent) => {
+      if (!user || !db) return;
+      try {
+          await setDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'timeline_events', event.id), event);
+      } catch (e) {
+          console.error("Error saving event:", e);
+      }
+  };
+
+  const deleteEventFromDb = async (id: string) => {
+      if (!user || !db) return;
+      try {
+          await deleteDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'timeline_events', id));
+      } catch (e) {
+          console.error("Error deleting event:", e);
+      }
+  };
 
   // Keyboard Shortcuts for Undo/Redo
   useEffect(() => {
@@ -843,6 +883,8 @@ export default function App() {
                 onToggleKings={() => setShowKings(prev => !prev)}
                 onReset={() => { setTimelineYear(null); setShowDragonRiders(false); setShowKings(false); }}
                 className="mb-2"
+                events={timelineEvents}
+                onOpenEventsManager={() => setIsTimelineManagerOpen(true)}
            />
       </div>
 
@@ -939,6 +981,15 @@ export default function App() {
         datasets={datasets}
         selectedCharId={selectedCharId}
         onUnlink={handleUnlink}
+      />
+
+      <TimelineEventModal
+        isOpen={isTimelineManagerOpen}
+        onClose={() => setIsTimelineManagerOpen(false)}
+        themeConfig={themeConfig}
+        events={timelineEvents}
+        onSaveEvent={saveEventToDb}
+        onDeleteEvent={deleteEventFromDb}
       />
 
       {deleteTargetId && <Modal isOpen={true} onClose={() => setDeleteTargetId(null)} title="Eliminar" accentClass="text-red-500"><div className="text-white mb-4">¿Eliminar personaje?</div><button onClick={executeDeleteCharacter} className="bg-red-600 text-white px-4 py-2 rounded w-full">Confirmar</button></Modal>}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { RotateCcw, Flame, Crown } from 'lucide-react';
+import { RotateCcw, Flame, Crown, Settings } from 'lucide-react';
 import { formatYear } from '../utils/date';
+import { TimelineEvent } from '../types';
 
 interface TimelineControlsProps {
   minYear: number;
@@ -13,6 +14,8 @@ interface TimelineControlsProps {
   onToggleKings: () => void;
   onReset: () => void;
   className?: string;
+  events?: TimelineEvent[];
+  onOpenEventsManager?: () => void;
 }
 
 const TimelineControls: React.FC<TimelineControlsProps> = ({
@@ -25,18 +28,22 @@ const TimelineControls: React.FC<TimelineControlsProps> = ({
   showKings,
   onToggleKings,
   onReset,
-  className = ''
+  className = '',
+  events = [],
+  onOpenEventsManager
 }) => {
   const sliderValue = currentYear ?? maxYear;
   const percentage = ((sliderValue - minYear) / (maxYear - minYear)) * 100;
 
   const [hoveredButton, setHoveredButton] = useState<string | null>(null);
+  const [hoveredEventId, setHoveredEventId] = useState<string | null>(null);
 
   // Helper to render tooltip to the right of the sidebar
-  const renderTooltip = (text: string) => (
+  const renderTooltip = (text: string, subtext?: string) => (
     <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-1.5 bg-zinc-950 border border-zinc-700 text-zinc-200 text-xs font-cinzel font-bold rounded-lg shadow-xl whitespace-nowrap z-[60] pointer-events-none animate-in fade-in slide-in-from-left-2 duration-200">
       <div className="absolute top-1/2 -left-1 -mt-1 border-4 border-transparent border-r-zinc-700" />
-      {text}
+      <div>{text}</div>
+      {subtext && <div className="text-[10px] text-zinc-500 font-mono mt-0.5">{subtext}</div>}
     </div>
   );
 
@@ -88,6 +95,40 @@ const TimelineControls: React.FC<TimelineControlsProps> = ({
         <div className="absolute h-full w-1 bg-zinc-800 rounded-full" />
         <div className="absolute bottom-0 w-1 bg-gradient-to-t from-zinc-600 to-zinc-800 rounded-full transition-all duration-100" style={{ height: `${percentage}%` }} />
 
+        {/* Timeline Event Markers */}
+        <div className="absolute inset-0 w-full pointer-events-none">
+            {events.map(evt => {
+                // Calculate position percentage
+                // Bottom corresponds to minYear (0%), Top to maxYear (100%)
+                const startP = Math.max(0, Math.min(100, ((evt.startYear - minYear) / (maxYear - minYear)) * 100));
+                const endP = Math.max(0, Math.min(100, ((evt.endYear - minYear) / (maxYear - minYear)) * 100));
+                const height = Math.max(2, endP - startP); // Min height 2%
+
+                return (
+                    <div
+                        key={evt.id}
+                        className="absolute right-1/2 translate-x-[8px] w-1.5 rounded-sm cursor-pointer pointer-events-auto hover:w-2 hover:translate-x-[9px] transition-all"
+                        style={{
+                            bottom: `${startP}%`,
+                            height: `${height}%`,
+                            backgroundColor: evt.color === 'zinc' ? '#52525b' : (evt.color === 'gold' ? '#eab308' : evt.color)
+                        }}
+                        onMouseEnter={() => setHoveredEventId(evt.id)}
+                        onMouseLeave={() => setHoveredEventId(null)}
+                        onClick={(e) => { e.stopPropagation(); onYearChange(evt.startYear); }}
+                    >
+                        {hoveredEventId === evt.id && (
+                            <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-1.5 bg-zinc-950 border border-zinc-700 text-zinc-200 text-xs font-cinzel font-bold rounded-lg shadow-xl whitespace-nowrap z-[60] animate-in fade-in slide-in-from-left-2 duration-200">
+                                <div className="absolute top-1/2 -left-1 -mt-1 border-4 border-transparent border-r-zinc-700" />
+                                <div>{evt.title}</div>
+                                <div className="text-[10px] text-zinc-500 font-mono mt-0.5">{formatYear(evt.startYear)} - {formatYear(evt.endYear)}</div>
+                            </div>
+                        )}
+                    </div>
+                );
+            })}
+        </div>
+
         {/* Input Range - Improved Hit Area */}
         <div className="absolute inset-0 flex items-center justify-center">
              <input
@@ -96,11 +137,9 @@ const TimelineControls: React.FC<TimelineControlsProps> = ({
               max={maxYear}
               value={sliderValue}
               onChange={(e) => onYearChange(parseInt(e.target.value, 10))}
-              // Standard vertical appearance where supported, fallback to rotation if needed but fixing dimensions
-              // Note: Tailwind doesn't have built-in vertical range utils, using style.
-              className="opacity-0 cursor-pointer w-full h-full"
+              className="opacity-0 cursor-pointer w-full h-full z-10"
               style={{
-                  appearance: 'slider-vertical', // Works in Chrome/Edge/Safari
+                  appearance: 'slider-vertical',
                   WebkitAppearance: 'slider-vertical',
                   width: '100%',
                   height: '100%'
@@ -108,9 +147,9 @@ const TimelineControls: React.FC<TimelineControlsProps> = ({
             />
         </div>
 
-        {/* Custom Thumb Visual (Follows value) - Pointer events none so click goes through to input */}
+        {/* Custom Thumb Visual */}
         <div
-            className="absolute w-4 h-4 bg-white rounded-full shadow-[0_0_15px_rgba(255,255,255,0.5)] border-2 border-zinc-900 pointer-events-none transition-all duration-75 ease-out"
+            className="absolute w-4 h-4 bg-white rounded-full shadow-[0_0_15px_rgba(255,255,255,0.5)] border-2 border-zinc-900 pointer-events-none transition-all duration-75 ease-out z-20"
             style={{ bottom: `calc(${percentage}% - 8px)` }}
         >
             {/* Year Tooltip next to thumb */}
@@ -121,6 +160,19 @@ const TimelineControls: React.FC<TimelineControlsProps> = ({
       </div>
 
       <div className="w-full h-px bg-zinc-800 mt-2" />
+
+      {/* Events Manager Button */}
+      {onOpenEventsManager && (
+          <button
+            onClick={onOpenEventsManager}
+            onMouseEnter={() => setHoveredButton('events')}
+            onMouseLeave={() => setHoveredButton(null)}
+            className="p-2 hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 rounded-xl transition-all duration-300 group relative"
+          >
+            <Settings size={16} />
+            {hoveredButton === 'events' && renderTooltip("Gestionar Eras")}
+          </button>
+      )}
 
       {/* Reset Button */}
       <button

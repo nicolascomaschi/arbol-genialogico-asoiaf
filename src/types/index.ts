@@ -15,7 +15,7 @@ export type Character = {
   isNonCanon?: boolean;
   isDragonRider?: boolean;
   isDisputed?: boolean;
-  disputedParentageLore?: string; // New field
+  disputedParentageLore?: string;
   dragonName?: string;
   isGap?: boolean;
   house?: string;
@@ -57,4 +57,13 @@ export type HouseData = {
     seat?: string;
     history?: string;
   };
+};
+
+export type TimelineEvent = {
+  id: string;
+  title: string;
+  startYear: number;
+  endYear: number;
+  color: string;
+  description?: string;
 };
