@@ -98,19 +98,31 @@ const TimelineControls: React.FC<TimelineControlsProps> = ({
         {/* Timeline Event Markers */}
         <div className="absolute inset-0 w-full pointer-events-none">
             {events.map(evt => {
-                // Calculate position percentage
-                // Bottom corresponds to minYear (0%), Top to maxYear (100%)
-                const startP = Math.max(0, Math.min(100, ((evt.startYear - minYear) / (maxYear - minYear)) * 100));
-                const endP = Math.max(0, Math.min(100, ((evt.endYear - minYear) / (maxYear - minYear)) * 100));
-                const height = Math.max(2, endP - startP); // Min height 2%
+                const totalSpan = maxYear - minYear;
+                if (totalSpan <= 0) return null;
+
+                // Position calculation:
+                // bottom is proportional to startYear.
+                // height is proportional to duration.
+                // We add minHeight to ensure visibility.
+
+                const startP = Math.max(0, Math.min(100, ((evt.startYear - minYear) / totalSpan) * 100));
+                const endP = Math.max(0, Math.min(100, ((evt.endYear - minYear) / totalSpan) * 100));
+                const heightP = endP - startP;
+
+                // To center the min-height expansion, we can use flex or transform.
+                // Simpler: Just make it grow up from startP, with min-height.
+                // But if it grows only up, a 1 year event might look like it starts at year X but ends at X+10px visually.
+                // It is acceptable for markers to be slightly larger than the actual timeframe on a small scale.
 
                 return (
                     <div
                         key={evt.id}
-                        className="absolute right-1/2 translate-x-[8px] w-1.5 rounded-sm cursor-pointer pointer-events-auto hover:w-2 hover:translate-x-[9px] transition-all"
+                        className="absolute right-1/2 translate-x-[8px] w-1.5 rounded-sm cursor-pointer pointer-events-auto hover:w-2 hover:translate-x-[9px] transition-all hover:z-[60]"
                         style={{
                             bottom: `${startP}%`,
-                            height: `${height}%`,
+                            height: `${heightP}%`,
+                            minHeight: '8px',
                             backgroundColor: evt.color === 'zinc' ? '#52525b' : (evt.color === 'gold' ? '#eab308' : evt.color)
                         }}
                         onMouseEnter={() => setHoveredEventId(evt.id)}
