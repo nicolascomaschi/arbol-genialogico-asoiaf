@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Trash2, Calendar, Type, Palette } from 'lucide-react';
+import { Trash2, Calendar, Type, Palette, Layers } from 'lucide-react';
 import Modal from './Modal';
 import { TimelineEvent, ThemeConfig } from '../types';
 
@@ -26,12 +26,13 @@ const TimelineEventModal: React.FC<TimelineEventModalProps> = ({
     startYear: 0,
     endYear: 0,
     color: 'red',
-    description: ''
+    description: '',
+    level: 'event'
   });
 
   const resetForm = () => {
     setEditingId(null);
-    setFormData({ title: '', startYear: 0, endYear: 0, color: 'red', description: '' });
+    setFormData({ title: '', startYear: 0, endYear: 0, color: 'red', description: '', level: 'event' });
   };
 
   const handleEdit = (evt: TimelineEvent) => {
@@ -41,7 +42,8 @@ const TimelineEventModal: React.FC<TimelineEventModalProps> = ({
         startYear: evt.startYear,
         endYear: evt.endYear,
         color: evt.color,
-        description: evt.description || ''
+        description: evt.description || '',
+        level: evt.level || 'event'
     });
   };
 
@@ -78,6 +80,19 @@ const TimelineEventModal: React.FC<TimelineEventModalProps> = ({
                         <Type size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500" />
                     </div>
                 </div>
+                <div className="w-1/3">
+                    <div className="relative">
+                        <select
+                            className="w-full bg-zinc-950 border border-zinc-700 rounded p-2 pl-8 text-white text-sm focus:border-zinc-500 outline-none appearance-none"
+                            value={formData.level}
+                            onChange={e => setFormData({...formData, level: e.target.value as 'era' | 'event'})}
+                        >
+                            <option value="event">Evento</option>
+                            <option value="era">Era (General)</option>
+                        </select>
+                        <Layers size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500" />
+                    </div>
+                </div>
             </div>
 
             <div className="flex gap-2">
@@ -107,13 +122,13 @@ const TimelineEventModal: React.FC<TimelineEventModalProps> = ({
 
             <div className="flex gap-2 items-center">
                 <span className="text-xs text-zinc-500 font-bold uppercase mr-2"><Palette size={12} className="inline mr-1"/> Color</span>
-                {['red', 'gold', 'blue', 'green', 'zinc'].map(c => (
+                {['red', 'gold', 'blue', 'green', 'zinc', 'purple'].map(c => (
                     <button
                         key={c}
                         type="button"
                         onClick={() => setFormData({...formData, color: c})}
                         className={`w-5 h-5 rounded-full border transition-all ${formData.color === c ? 'border-white scale-110 shadow-lg' : 'border-transparent opacity-50 hover:opacity-100'}`}
-                        style={{ backgroundColor: c === 'zinc' ? '#52525b' : (c === 'gold' ? '#eab308' : c) }}
+                        style={{ backgroundColor: c === 'zinc' ? '#52525b' : (c === 'gold' ? '#eab308' : (c === 'purple' ? '#9333ea' : c)) }}
                     />
                 ))}
             </div>
@@ -142,12 +157,13 @@ const TimelineEventModal: React.FC<TimelineEventModalProps> = ({
                 {events.length === 0 ? (
                     <div className="text-center py-8 text-zinc-600 text-xs italic">No hay eventos registrados</div>
                 ) : (
-                    events.map(evt => (
+                    events.sort((a, b) => a.startYear - b.startYear).map(evt => (
                         <div key={evt.id} className="bg-zinc-900 border border-zinc-800 p-3 rounded-lg flex items-center justify-between group hover:border-zinc-700 transition-colors">
                             <div>
                                 <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: evt.color === 'zinc' ? '#52525b' : (evt.color === 'gold' ? '#eab308' : evt.color) }} />
+                                    <div className={`w-2 h-2 rounded-full ${evt.level === 'era' ? 'ring-2 ring-white/20' : ''}`} style={{ backgroundColor: evt.color === 'zinc' ? '#52525b' : (evt.color === 'gold' ? '#eab308' : (evt.color === 'purple' ? '#9333ea' : evt.color)) }} />
                                     <span className="font-bold text-zinc-200 text-sm">{evt.title}</span>
+                                    {evt.level === 'era' && <span className="text-[9px] uppercase bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded border border-zinc-700 ml-2">Era</span>}
                                 </div>
                                 <span className="text-xs text-zinc-500 font-mono ml-4">{evt.startYear} - {evt.endYear} AC</span>
                             </div>

@@ -66,4 +66,5 @@ export type TimelineEvent = {
   endYear: number;
   color: string;
   description?: string;
+  level: 'era' | 'event'; // New field: Era (General) vs Event (Specific)
 };
