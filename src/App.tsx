@@ -245,6 +245,7 @@ export default function App() {
         });
 
         // Only update if data has actually changed to avoid clearing undo history unnecessarily
+        // This handles the case where the server confirms our own write (which we already have)
         const merged = { ...datasetsRef.current, ...loadedDatasets };
         if (JSON.stringify(merged) !== JSON.stringify(datasetsRef.current)) {
             resetDatasets(merged);
@@ -833,7 +834,7 @@ export default function App() {
       />
 
       {/* FIXED BOTTOM LEFT CONTROLS */}
-      <div className="fixed bottom-6 left-6 z-[70]">
+      <div className="fixed bottom-24 left-6 z-[70]">
         <div className="bg-zinc-900/95 border border-zinc-700 rounded-2xl py-3 px-2 flex flex-col items-center gap-2 shadow-[0_0_40px_rgba(0,0,0,0.5)] backdrop-blur-xl w-14 transition-all duration-300">
 
            <button
