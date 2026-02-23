@@ -147,35 +147,130 @@ export default function App() {
 
   const themeConfig = useMemo(() => theme.config || COLOR_THEMES.black, [theme.config]);
 
-  const timelineBounds = useMemo(() => {
-    const years = characters.flatMap(c => [
-        parseYear(c.birthYear),
-        parseYear(c.deathYear)
-    ]).filter((y): y is number => y !== null);
-
-    if (years.length === 0) return { min: -100, max: 300 };
-    return {
-        min: Math.min(...years) - 10,
-        max: Math.max(...years) + 10
-    };
+  // Create a map for quick character lookup
+  const characterMap = useMemo(() => {
+    return new Map(characters.map(c => [c.id, c]));
   }, [characters]);
+
+  // Pre-calculate inferred dates for characters without explicit dates (Multi-pass propagation)
+  const effectiveDates = useMemo(() => {
+    // Initialize with explicit dates
+    const dates: Record<string, { birth: number, death: number }> = {};
+
+    // Seed with explicit dates
+    characters.forEach(char => {
+        const b = parseYear(char.birthYear);
+        const d = parseYear(char.deathYear);
+        if (b !== null || d !== null) {
+            // If we have at least one date, use it.
+            // If one is missing, estimate it (Life ~60 years).
+            dates[char.id] = {
+                birth: b !== null ? b : (d !== null ? d - 60 : 0),
+                death: d !== null ? d : (b !== null ? b + 60 : 0)
+            };
+        }
+    });
+
+    // Multi-pass loop to propagate dates (Parents <-> Children <-> Partners)
+    // 3 passes is usually enough for most family tree depths visible on screen
+    for (let pass = 0; pass < 3; pass++) {
+        let changes = false;
+
+        // Create a copy of current dates to read from while updating
+        // Actually, reading from 'dates' directly propagates faster within the same pass
+
+        characters.forEach(char => {
+             // Skip if fully explicit (don't overwrite known data)
+             if (parseYear(char.birthYear) !== null && parseYear(char.deathYear) !== null) return;
+
+             // If we already have a date from initialization or previous pass, we might still update it
+             // if it was purely inferred, but let's stick to filling gaps for now.
+             // Actually, the goal is to fill MISSING dates.
+             if (dates[char.id]) return;
+
+             const estimates: number[] = [];
+
+             // 1. From Children (Parent is ~25 years older than child)
+             // Find connections where this char is a parent
+             const childrenIds = connections
+                 .filter(conn => conn.parents.includes(char.id))
+                 .flatMap(conn => conn.children);
+
+             childrenIds.forEach(childId => {
+                 if (dates[childId]) estimates.push(dates[childId].birth - 25);
+             });
+
+             // 2. From Parents (Child is ~25 years younger than parent)
+             // Find connections where this char is a child
+             const parentIds = connections
+                 .filter(conn => conn.children.includes(char.id))
+                 .flatMap(conn => conn.parents);
+
+             parentIds.forEach(pid => {
+                 if (dates[pid]) estimates.push(dates[pid].birth + 25);
+             });
+
+             // 3. From Partners (Assume same generation/age)
+             // Find connections where this char is a parent alongside someone else
+             const partnerIds = connections
+                 .filter(conn => conn.parents.includes(char.id))
+                 .flatMap(conn => conn.parents.filter(p => p !== char.id));
+
+             partnerIds.forEach(pid => {
+                 if (dates[pid]) estimates.push(dates[pid].birth);
+             });
+
+             if (estimates.length > 0) {
+                 const avgBirth = Math.floor(estimates.reduce((a, b) => a + b, 0) / estimates.length);
+                 dates[char.id] = { birth: avgBirth, death: avgBirth + 60 };
+                 changes = true;
+             }
+        });
+
+        if (!changes) break;
+    }
+
+    return dates;
+  }, [characters, connections, characterMap]);
+
+  const timelineBounds = useMemo(() => {
+    // Start with default bounds
+    let min = -100;
+    let max = 300;
+
+    const allYears: number[] = [];
+    Object.values(effectiveDates).forEach(d => {
+        allYears.push(d.birth);
+        allYears.push(d.death);
+    });
+
+    if (allYears.length > 0) {
+        min = Math.min(...allYears) - 10;
+        max = Math.max(...allYears) + 10;
+    }
+
+    return { min, max };
+  }, [effectiveDates]);
 
   const isNodeDimmed = useCallback((char: Character) => {
     if (showDragonRiders && !char.isDragonRider) return true;
     if (showKings && !char.isKing) return true;
 
     if (timelineYear !== null) {
-        const birth = parseYear(char.birthYear);
-        const death = parseYear(char.deathYear);
+        // Use effective dates (explicit or inferred)
+        const dateInfo = effectiveDates[char.id];
 
-        // If birth is known and greater than current year, dim it (not born yet)
-        if (birth !== null && birth > timelineYear) return true;
+        // If we still have no dates, default to visible (permissive)
+        if (!dateInfo) return false;
 
-        // If death is known and less than current year, dim it (already dead)
-        if (death !== null && death < timelineYear) return true;
+        const { birth, death } = dateInfo;
+
+        // Check bounds
+        if (birth > timelineYear) return true; // Not born yet
+        if (death < timelineYear) return true; // Already dead
     }
     return false;
-  }, [showDragonRiders, showKings, timelineYear]);
+  }, [showDragonRiders, showKings, timelineYear, effectiveDates]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.8);
