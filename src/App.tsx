@@ -16,7 +16,7 @@ import { parseYear } from './utils/date';
 
 import ConnectionLines from './components/ConnectionLines';
 import CharacterNode from './components/CharacterNode';
-import TimelineControls from './components/TimelineControls';
+import TimelineBar from './components/TimelineBar';
 import Header from './components/Header';
 import LegendModal from './components/LegendModal';
 import HouseModal from './components/HouseModal';
@@ -870,23 +870,20 @@ export default function App() {
         </div>
       </div>
 
-      {/* FIXED BOTTOM RIGHT TIMELINE */}
-      <div className="fixed bottom-6 right-6 z-[70] flex flex-col gap-2 w-16">
-           <TimelineControls
-                minYear={timelineBounds.min}
-                maxYear={timelineBounds.max}
-                currentYear={timelineYear}
-                onYearChange={setTimelineYear}
-                showDragonRiders={showDragonRiders}
-                onToggleDragonRiders={() => setShowDragonRiders(prev => !prev)}
-                showKings={showKings}
-                onToggleKings={() => setShowKings(prev => !prev)}
-                onReset={() => { setTimelineYear(null); setShowDragonRiders(false); setShowKings(false); }}
-                className="mb-2"
-                events={timelineEvents}
-                onOpenEventsManager={() => setIsTimelineManagerOpen(true)}
-           />
-      </div>
+      {/* FIXED BOTTOM TIMELINE BAR */}
+      <TimelineBar
+          minYear={timelineBounds.min}
+          maxYear={timelineBounds.max}
+          currentYear={timelineYear}
+          onYearChange={setTimelineYear}
+          showDragonRiders={showDragonRiders}
+          onToggleDragonRiders={() => setShowDragonRiders(prev => !prev)}
+          showKings={showKings}
+          onToggleKings={() => setShowKings(prev => !prev)}
+          onReset={() => { setTimelineYear(null); setShowDragonRiders(false); setShowKings(false); }}
+          events={timelineEvents}
+          onOpenEventsManager={() => setIsTimelineManagerOpen(true)}
+      />
 
       {/* CANVAS */}
       <div 
