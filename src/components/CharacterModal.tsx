@@ -63,10 +63,12 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
 
       let chars = allCharacters.filter(c => c.id !== selectedCharId);
       if (searchQuery.trim()) {
-          const query = searchQuery.toLowerCase();
+          const normalize = (str: string) => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+          const query = normalize(searchQuery);
+
           chars = chars.filter(c =>
-              c.name.toLowerCase().includes(query) ||
-              (c.title && c.title.toLowerCase().includes(query))
+              normalize(c.name).includes(query) ||
+              (c.title && normalize(c.title).includes(query))
           );
       }
       return chars;
