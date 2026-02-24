@@ -54,67 +54,128 @@ const Header: React.FC<HeaderProps> = ({
   isExtinct
 }) => {
   return (
-    <div className={`absolute top-0 left-0 w-full z-[60] bg-gradient-to-b p-0 pb-12 pointer-events-none transition-colors duration-500`} style={theme.customColor ? { background: `linear-gradient(to bottom, ${theme.customColor}E6, transparent)` } : undefined}>
-         {!theme.customColor && <div className={`absolute inset-0 bg-gradient-to-b ${themeConfig.bgGradient} -z-10`} />}
-         <div className="flex flex-col md:flex-row justify-between items-start md:items-center p-3 pointer-events-auto gap-4">
-             <div className="flex items-center gap-6 group">
-                 {/* SIGIL */}
-                 <div className="relative group/sigil">
-                     <div
-                       className={`w-14 h-14 rounded-2xl flex items-center justify-center bg-black/40 backdrop-blur-md border-2 shadow-lg overflow-hidden shrink-0 relative`}
-                       style={{ borderColor: theme.customColor || undefined }}
-                     >
-                        {!theme.customColor && <div className={`absolute inset-0 border-2 ${themeConfig.borderColor} opacity-50 rounded-xl pointer-events-none`} />}
-                        {theme.sigilUrl ? <img src={theme.sigilUrl} alt="" className="w-full h-full object-cover" /> : (isExtinct ? <ShieldOff size={28} className="opacity-90 drop-shadow-lg text-zinc-500" /> : <Shield size={28} className="opacity-90 drop-shadow-lg" style={{ color: theme.customColor || undefined }} />)}
-                        {!theme.customColor && !theme.sigilUrl && !isExtinct && <Shield size={28} className={`opacity-90 drop-shadow-lg ${themeConfig.accentColor}`} />}
-                     </div>
+    // Fixed "Floating Island" Container
+    <div className={`fixed top-4 left-6 right-6 z-[60] h-20 bg-zinc-950/90 backdrop-blur-xl border border-zinc-800 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.6)] flex items-center px-4 md:px-6 justify-between transition-all duration-300`}>
 
-                    {/* Sigil Tooltip - Outside overflow-hidden */}
-                    {theme.sigilDescription && (
-                        <div className="absolute top-16 left-0 w-64 bg-zinc-950 border border-zinc-700 p-3 rounded-lg shadow-2xl opacity-0 group-hover/sigil:opacity-100 transition-opacity pointer-events-none z-[100] text-xs font-sans text-zinc-300 text-left">
-                            <div className="flex items-center gap-2 mb-1 text-white font-bold font-cinzel border-b border-zinc-800 pb-1">
-                                <Shield size={12}/> Blasón
-                            </div>
-                            {theme.sigilDescription}
+         {/* LEFT SECTION: House Identity */}
+         <div className="flex items-center gap-4 group h-full">
+
+             {/* SIGIL - Smaller & Cleaner */}
+             <div className="relative group/sigil h-12 w-12 shrink-0">
+                 <div
+                   className={`w-full h-full rounded-xl flex items-center justify-center bg-black/20 overflow-hidden border border-white/10 shadow-inner transition-transform group-hover/sigil:scale-105`}
+                   style={{ borderColor: theme.customColor || undefined }}
+                 >
+                    {theme.sigilUrl ? <img src={theme.sigilUrl} alt="" className="w-full h-full object-cover" /> : (isExtinct ? <ShieldOff size={24} className="opacity-80 text-zinc-500" /> : <Shield size={24} className="opacity-90" style={{ color: theme.customColor || undefined }} />)}
+                    {!theme.customColor && !theme.sigilUrl && !isExtinct && <Shield size={24} className={`opacity-90 ${themeConfig.accentColor}`} />}
+                 </div>
+
+                {/* Sigil Tooltip */}
+                {theme.sigilDescription && (
+                    <div className="absolute top-14 left-0 w-64 bg-zinc-950 border border-zinc-700 p-3 rounded-lg shadow-2xl opacity-0 group-hover/sigil:opacity-100 transition-opacity pointer-events-none z-[100] text-xs font-sans text-zinc-300 text-left animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div className="flex items-center gap-2 mb-1 text-white font-bold font-cinzel border-b border-zinc-800 pb-1">
+                            <Shield size={12}/> Blasón
+                        </div>
+                        {theme.sigilDescription}
+                    </div>
+                )}
+             </div>
+
+             {/* TEXT INFO */}
+             <div className="flex flex-col justify-center h-full pt-1">
+                <h1 className={`text-xl font-cinzel font-bold tracking-widest uppercase transition-colors duration-300 flex items-center gap-3 leading-none`} style={{ color: theme.customColor }}>
+                    {!theme.customColor && <span className={themeConfig.textColor}>{theme.name}</span>}
+                    {theme.customColor && theme.name}
+                    <button onClick={onEditHouse} className="opacity-0 group-hover:opacity-100 p-1 rounded-full hover:bg-white/10 text-zinc-500 hover:text-white transition-all scale-90 hover:scale-100"><Edit2 size={14}/></button>
+                </h1>
+
+                <div className="flex items-center gap-3 mt-1 text-[10px] font-cinzel tracking-wider text-zinc-400 group/seat cursor-help relative h-4">
+                    {/* Motto or Status */}
+                    <span className="italic opacity-80">{theme.motto ? `"${theme.motto}"` : (isExtinct ? "Casa Extinta" : "Editor de Linaje")}</span>
+
+                    {/* Seat */}
+                    {theme.seat && (
+                        <>
+                            <span className="w-px h-3 bg-zinc-700 mx-1"/>
+                            <span className="flex items-center gap-1 hover:text-white transition-colors" title={`Asentamiento: ${theme.seat}`}>
+                                <Castle size={10}/> {theme.seat}
+                            </span>
+                        </>
+                    )}
+
+                    {/* Saving Indicator */}
+                    {isSaving && (
+                        <>
+                            <span className="w-px h-3 bg-zinc-700 mx-1"/>
+                            <span className="flex items-center gap-1 text-zinc-500 font-sans not-italic animate-pulse">
+                                <Loader2 size={10} className="animate-spin"/> Guardando...
+                            </span>
+                        </>
+                    )}
+
+                    {/* History Tooltip */}
+                    {theme.history && (
+                        <div className="absolute top-8 left-0 w-80 bg-zinc-950 border border-zinc-700 p-4 rounded-lg shadow-2xl opacity-0 group-hover/seat:opacity-100 transition-opacity pointer-events-none z-50 text-xs font-sans text-zinc-300 text-left animate-in fade-in slide-in-from-top-2 duration-200">
+                            <div className="flex items-center gap-2 mb-2 text-white font-bold font-cinzel border-b border-zinc-800 pb-1"><Feather size={12}/> Historia de la Casa</div>
+                            {theme.history}
                         </div>
                     )}
-                 </div>
-                 {/* TITLE */}
-                 <div>
-                    <h1 className={`text-2xl font-cinzel font-bold tracking-widest uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] transition-colors duration-300 flex items-center gap-3`} style={{ color: theme.customColor }}>
-                        {!theme.customColor && <span className={themeConfig.textColor}>{theme.name}</span>}
-                        {theme.customColor && theme.name}
-                        <button onClick={onEditHouse} className="opacity-0 group-hover:opacity-100 p-1.5 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition-opacity"><Edit2 size={16}/></button>
-                    </h1>
-                    <div className="text-zinc-300 text-xs mt-0.5 italic font-cinzel tracking-wider flex items-center gap-2 opacity-80 group/seat cursor-help relative">
-                        <span className="w-8 h-px bg-zinc-500/50 inline-block"/>
-                        {theme.motto ? `"${theme.motto}"` : (isExtinct ? "Casa Extinta" : "Editor de Linaje")}
-                        {theme.seat && <span className="text-zinc-600 mx-1">•</span>}
-                        {theme.seat && <span className="flex items-center gap-1 text-zinc-400 hover:text-white" title={`Asentamiento: ${theme.seat}`}><Castle size={12}/> {theme.seat}</span>}
-                        <span className="w-8 h-px bg-zinc-500/50 inline-block"/>
-                        {isSaving && <span className="ml-2 flex items-center gap-1 text-zinc-500 text-[10px] font-sans not-italic"><Loader2 size={10} className="animate-spin"/> Guardando...</span>}
-                        {/* House History Tooltip */}
-                        {theme.history && (
-                            <div className="absolute top-6 left-0 w-80 bg-zinc-950 border border-zinc-700 p-4 rounded-lg shadow-2xl opacity-0 group-hover/seat:opacity-100 transition-opacity pointer-events-none z-50 text-xs font-sans text-zinc-300 text-left">
-                                <div className="flex items-center gap-2 mb-2 text-white font-bold font-cinzel border-b border-zinc-800 pb-1"><Feather size={12}/> Historia de la Casa</div>
-                                {theme.history}
-                            </div>
-                        )}
-                    </div>
-                 </div>
+                </div>
              </div>
-             {/* TABS & TOOLS */}
-             <div className="flex flex-col items-end gap-2">
-                 {/* MENU HAMBURGUESA DE CASAS */}
-                 <div className="relative">
-                    <button
-                        onClick={() => setIsHouseMenuOpen(!isHouseMenuOpen)}
-                        className="flex items-center gap-2 bg-black/60 px-3 py-1.5 rounded-lg backdrop-blur-md border border-zinc-700/50 text-zinc-300 hover:text-white transition-colors font-cinzel text-xs"
-                    >
-                        <Menu size={14} /> <span className="hidden sm:inline">Casas</span>
-                    </button>
-                    {isHouseMenuOpen && (
-                        <div className="absolute top-full right-0 mt-2 w-64 bg-zinc-950/95 backdrop-blur-md border border-zinc-700 rounded-xl shadow-2xl p-2 z-[60] flex flex-col gap-1 max-h-[60vh] overflow-y-auto custom-scrollbar">
+         </div>
+
+         {/* RIGHT SECTION: Controls */}
+         <div className="flex items-center gap-3 h-full">
+
+             {/* SEARCH - Compact */}
+             <div className="relative group/search">
+                <div className={`bg-zinc-900/50 hover:bg-zinc-900 px-3 py-2 rounded-xl border border-zinc-800 hover:border-zinc-700 flex items-center gap-2 transition-all w-48 focus-within:w-64 focus-within:bg-black focus-within:border-zinc-600`}>
+                    <Search size={14} className="text-zinc-500 group-focus-within/search:text-zinc-300"/>
+                    <input
+                        type="text"
+                        placeholder="Buscar personaje..."
+                        className="bg-transparent border-none outline-none text-xs text-white w-full font-cinzel placeholder:text-zinc-600"
+                        value={searchQuery}
+                        onChange={(e) => { setSearchQuery(e.target.value); setIsSearchOpen(true); }}
+                        onFocus={() => setIsSearchOpen(true)}
+                        onBlur={() => setTimeout(() => setIsSearchOpen(false), 200)}
+                    />
+                    {searchQuery && <button onClick={() => setSearchQuery('')}><X size={12} className="text-zinc-500 hover:text-white"/></button>}
+                </div>
+
+                {/* Search Results Dropdown */}
+                {isSearchOpen && searchResults.length > 0 && (
+                    <div className="absolute top-full right-0 mt-3 w-72 bg-zinc-950 border border-zinc-700 rounded-xl shadow-2xl max-h-80 overflow-y-auto custom-scrollbar z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                        {searchResults.map(char => (
+                            <button key={char.id} onClick={() => navigateToCharacterHouse(char)} className="w-full text-left px-4 py-3 border-b border-zinc-800 last:border-0 hover:bg-zinc-800/50 flex items-center gap-3 transition-colors group/item">
+                                <div className="w-8 h-8 rounded-full bg-zinc-900 overflow-hidden shrink-0 border border-zinc-700 group-hover/item:border-zinc-500 transition-colors">
+                                    {char.imageUrl ? <img src={char.imageUrl} alt="" className="w-full h-full object-cover"/> : <User size={14} className="m-auto text-zinc-600 h-full w-full p-2"/>}
+                                </div>
+                                <div>
+                                    <span className="font-cinzel font-bold text-xs text-zinc-200 block group-hover/item:text-white">{char.name}</span>
+                                    <span className="text-[10px] text-zinc-500 flex items-center gap-1 mt-0.5">{(char as any).originHouseName ? <><Shield size={8}/> {(char as any).originHouseName}</> : "Sin casa"}</span>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                )}
+             </div>
+
+             <div className="w-px h-8 bg-zinc-800 mx-1"/>
+
+             {/* HOUSE SELECTOR - Button Style */}
+             <div className="relative">
+                <button
+                    onClick={() => setIsHouseMenuOpen(!isHouseMenuOpen)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-cinzel text-xs font-bold border ${isHouseMenuOpen ? 'bg-zinc-800 text-white border-zinc-600' : 'bg-zinc-900/50 text-zinc-400 border-zinc-800 hover:bg-zinc-900 hover:text-white hover:border-zinc-700'}`}
+                >
+                    <Menu size={14} />
+                    <span>Casas</span>
+                </button>
+
+                {/* House Menu Dropdown */}
+                {isHouseMenuOpen && (
+                    <div className="absolute top-full right-0 mt-3 w-64 bg-zinc-950/95 backdrop-blur-xl border border-zinc-700 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] p-2 z-[60] flex flex-col gap-1 max-h-[60vh] overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2 duration-200">
                             <h3 className="text-xs font-bold text-zinc-500 uppercase px-2 py-1">Seleccionar Casa</h3>
                             {Object.values(datasets).map(h => {
                                 const isActive = activeTab === h.id;
@@ -147,28 +208,8 @@ const Header: React.FC<HeaderProps> = ({
                         </div>
                     )}
                  </div>
-
-                 {/* SEARCH */}
-                 <div className="flex gap-2">
-                    <div className="bg-zinc-900/80 px-3 py-1.5 rounded-lg border border-zinc-700 flex items-center gap-2">
-                        <Search size={14} className="text-zinc-400"/>
-                        <input type="text" placeholder="Buscar..." className="bg-transparent border-none outline-none text-xs text-white w-32 font-cinzel" value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setIsSearchOpen(true); }} onFocus={() => setIsSearchOpen(true)} onBlur={() => setTimeout(() => setIsSearchOpen(false), 200)}/>
-                        {searchQuery && <button onClick={() => setSearchQuery('')}><X size={12} className="text-zinc-500 hover:text-white"/></button>}
-                    </div>
-                 </div>
-                 {isSearchOpen && searchResults.length > 0 && (
-                    <div className="absolute top-full right-0 mt-2 w-64 bg-zinc-950 border border-zinc-700 rounded-lg shadow-2xl max-h-80 overflow-y-auto custom-scrollbar z-50">
-                        {searchResults.map(char => (
-                            <button key={char.id} onClick={() => navigateToCharacterHouse(char)} className="w-full text-left px-4 py-3 border-b border-zinc-800 last:border-0 hover:bg-zinc-800 flex items-center gap-3 transition-colors">
-                                <div className="w-8 h-8 rounded-full bg-zinc-900 overflow-hidden shrink-0 border border-zinc-600">{char.imageUrl ? <img src={char.imageUrl} alt="" className="w-full h-full object-cover"/> : <User size={16} className="m-auto text-zinc-500"/>}</div>
-                                <div><span className="font-cinzel font-bold text-sm text-zinc-200 block">{char.name}</span><span className="text-[10px] text-zinc-500 flex items-center gap-1">{(char as any).originHouseName && <><Shield size={8}/> {(char as any).originHouseName}</>}</span></div>
-                            </button>
-                        ))}
-                    </div>
-                )}
              </div>
-        </div>
-      </div>
+    </div>
   );
 };
 
