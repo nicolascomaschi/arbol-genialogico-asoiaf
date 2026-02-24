@@ -28,7 +28,7 @@ export const INITIAL_DATASETS: Record<string, HouseData> = {
   stark: {
     id: 'stark',
     characters: [
-        { id: 'eddard', name: 'Eddard "Ned"', title: 'Mano del Rey', wikiSlug: 'Eddard_Stark', imageUrl: 'https://awoiaf.westeros.org/images/thumb/7/7b/Eddard_Stark_Amoka.jpg/300px-Eddard_Stark_Amoka.jpg', generation: 1, x: 0, house: 'stark', birthYear: '263 AC', deathYear: '298 AC', status: 'dead', lore: 'Señor de Invernalia.' },
+        { id: 'eddard', name: 'Eddard "Ned"', title: 'Mano del Rey', wikiSlug: 'Eddard_Stark', imageUrl: 'https://awoiaf.westeros.org/images/thumb/7/7b/Eddard_Stark_Amoka.jpg/300px-Eddard_Stark_Amoka.jpg', generation: 1, x: 0, house: 'stark', birthYear: '263 AC', deathYear: '298 AC', status: 'dead', lore: 'Señor de Invernalia.', isHeadOfHouse: true },
     ],
     connections: [],
     rootId: 'eddard',
@@ -37,7 +37,7 @@ export const INITIAL_DATASETS: Record<string, HouseData> = {
   lannister: {
     id: 'lannister',
     characters: [
-        { id: 'tywin', name: 'Tywin', title: 'Mano del Rey', wikiSlug: 'Tywin_Lannister', imageUrl: 'https://awoiaf.westeros.org/images/thumb/e/e1/Tywin_Lannister_Amoka.jpg/300px-Tywin_Lannister_Amoka.jpg', generation: 1, x: -1, house: 'lannister', birthYear: '242 AC', deathYear: '300 AC', status: 'dead' },
+        { id: 'tywin', name: 'Tywin', title: 'Mano del Rey', wikiSlug: 'Tywin_Lannister', imageUrl: 'https://awoiaf.westeros.org/images/thumb/e/e1/Tywin_Lannister_Amoka.jpg/300px-Tywin_Lannister_Amoka.jpg', generation: 1, x: -1, house: 'lannister', birthYear: '242 AC', deathYear: '300 AC', status: 'dead', isHeadOfHouse: true },
     ],
     connections: [],
     rootId: 'tywin',
@@ -55,7 +55,7 @@ export const INITIAL_DATASETS: Record<string, HouseData> = {
   velaryon: {
     id: 'velaryon',
     characters: [
-        { id: 'corlys', name: 'Corlys', title: 'La Serpiente Marina', wikiSlug: 'Corlys_Velaryon', imageUrl: 'https://awoiaf.westeros.org/images/thumb/6/61/Corlys_Velaryon_The_Sea_Snake.jpg/300px-Corlys_Velaryon_The_Sea_Snake.jpg', generation: 1, x: 0, house: 'velaryon', birthYear: '53 AC', status: 'dead' },
+        { id: 'corlys', name: 'Corlys', title: 'La Serpiente Marina', wikiSlug: 'Corlys_Velaryon', imageUrl: 'https://awoiaf.westeros.org/images/thumb/6/61/Corlys_Velaryon_The_Sea_Snake.jpg/300px-Corlys_Velaryon_The_Sea_Snake.jpg', generation: 1, x: 0, house: 'velaryon', birthYear: '53 AC', status: 'dead', isHeadOfHouse: true },
     ],
     connections: [],
     rootId: 'corlys',
@@ -64,7 +64,7 @@ export const INITIAL_DATASETS: Record<string, HouseData> = {
   hightower: {
     id: 'hightower',
     characters: [
-        { id: 'otto', name: 'Otto Hightower', title: 'Mano del Rey', wikiSlug: 'Otto_Hightower', imageUrl: 'https://awoiaf.westeros.org/images/thumb/7/70/Otto_Hightower_Amoka.jpg/300px-Otto_Hightower_Amoka.jpg', generation: 1, x: 0, house: 'hightower', birthYear: '76 AC', status: 'dead' },
+        { id: 'otto', name: 'Otto Hightower', title: 'Mano del Rey', wikiSlug: 'Otto_Hightower', imageUrl: 'https://awoiaf.westeros.org/images/thumb/7/70/Otto_Hightower_Amoka.jpg/300px-Otto_Hightower_Amoka.jpg', generation: 1, x: 0, house: 'hightower', birthYear: '76 AC', status: 'dead', isHeadOfHouse: true },
     ],
     connections: [],
     rootId: 'otto',

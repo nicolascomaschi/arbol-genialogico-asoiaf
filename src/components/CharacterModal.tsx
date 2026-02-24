@@ -5,7 +5,7 @@ import { Character, CharacterStatus, HouseData, ThemeConfig } from '../types';
 import { COLOR_THEMES } from '../constants/theme';
 
 interface CharacterFormState {
-  name: string; title: string; house: string; isKing: boolean; isBastard: boolean; isNonCanon: boolean; isDragonRider: boolean; isDisputed?: boolean; disputedParentageLore?: string; dragonName: string; isGap: boolean; imageUrl: string; wikiLink: string;
+  name: string; title: string; house: string; isKing: boolean; isHeadOfHouse?: boolean; isBastard: boolean; isNonCanon: boolean; isDragonRider: boolean; isDisputed?: boolean; disputedParentageLore?: string; dragonName: string; isGap: boolean; imageUrl: string; wikiLink: string;
   birthYear: string; deathYear: string; lore: string; status: CharacterStatus | string;
   newHouseName: string; newHouseColor: string; newHouseCustomColor: string;
   artistName?: string; // New field
@@ -151,6 +151,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({
             </div>
             <div className="flex flex-wrap gap-2">
                 <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" checked={formData.isKing} onChange={e => setFormData({...formData, isKing: e.target.checked})} /> <span className="text-xs">Monarca</span></label>
+                <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" checked={formData.isHeadOfHouse} onChange={e => setFormData({...formData, isHeadOfHouse: e.target.checked})} /> <span className="text-xs">Cabeza de Casa</span></label>
                 <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" checked={formData.isBastard} onChange={e => setFormData({...formData, isBastard: e.target.checked})} /> <span className="text-xs">Bastardo</span></label>
                 <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" checked={formData.isNonCanon} onChange={e => setFormData({...formData, isNonCanon: e.target.checked})} /> <span className="text-xs">No Canon</span></label>
                 <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" checked={formData.isDisputed} onChange={e => setFormData({...formData, isDisputed: e.target.checked})} /> <span className="text-xs">Paternidad Disputada</span></label>

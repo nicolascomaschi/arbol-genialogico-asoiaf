@@ -11,6 +11,7 @@ export type Character = {
   generation: number;
   x: number;
   isKing?: boolean;
+  isHeadOfHouse?: boolean;
   isBastard?: boolean;
   isNonCanon?: boolean;
   isDragonRider?: boolean;

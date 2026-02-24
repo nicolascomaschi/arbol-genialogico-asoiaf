@@ -2,7 +2,7 @@ import React, { memo } from 'react';
 import {
   GitCommit, MoreVertical, User, Crown, Flame, Ban, AlertTriangle,
   Skull, HelpCircle, Ghost, BookOpen, LogOut, Edit2, Plus, UserPlus,
-  HeartPulse, Trash2, Minus, EyeOff, PenTool, Calendar
+  HeartPulse, Trash2, Minus, EyeOff, PenTool, Calendar, Castle
 } from 'lucide-react';
 import { Character, ThemeConfig } from '../types';
 import { GAP_NODE_SIZE, CARD_WIDTH, CARD_HEIGHT, X_SPACING, Y_SPACING } from '../constants/config';
@@ -52,21 +52,34 @@ const CharacterNode: React.FC<CharacterNodeProps> = ({
 }) => {
   // Check if dates are unknown/missing
   const hasUnknownDates = !char.birthYear && !char.deathYear;
+  const isHead = char.isHeadOfHouse && !char.isKing; // Head of house logic (kings override)
 
   return (
     <div
       className={`absolute rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.8)] group transition-all duration-300
           ${isDimmed ? 'opacity-20 grayscale pointer-events-none' : ''}
           ${char.isGap ? 'w-[60px] h-[60px] rounded-full border-dashed border-2 border-zinc-600 bg-black/50 flex items-center justify-center' : ''}
-          ${!char.isGap ? 'border border-zinc-700 bg-zinc-900 overflow-visible' : ''}
-          ${!isDimmed && char.house === activeTab ? (theme.customColor ? '' : themeConfig.borderColor) : (!isDimmed ? 'border-zinc-700 opacity-80 hover:opacity-100' : 'border-zinc-800')}
+          ${!char.isGap ? 'bg-zinc-900 overflow-visible' : ''}
+          ${/* Border Color Logic */ ''}
+          ${!isDimmed && char.house === activeTab
+              ? (isHead ? 'border-2' : 'border')
+              : (!isDimmed ? 'border border-zinc-700 opacity-80 hover:opacity-100' : 'border border-zinc-800')}
+          ${!isDimmed && char.house === activeTab && !theme.customColor && !isHead ? themeConfig.borderColor : ''}
+
+          ${/* Glow for Kings */ ''}
           ${!isDimmed && char.isKing && char.house === activeTab && !theme.customColor ? themeConfig.glowColor : ''}
           ${activeMenu === char.id ? 'z-[60]' : (draggingNode === char.id ? 'z-[100] scale-105 ring-2 ring-white/20 cursor-grabbing' : (isDimmed ? 'z-0' : 'z-10 hover:z-50 hover:scale-[1.02] cursor-grab'))}
       `}
       style={{
           left: char.x * X_SPACING, top: char.generation * Y_SPACING,
           width: char.isGap ? GAP_NODE_SIZE : CARD_WIDTH, height: char.isGap ? GAP_NODE_SIZE : CARD_HEIGHT,
-          borderColor: (!char.isGap && char.house === activeTab && theme.customColor) ? theme.customColor : undefined,
+          borderColor: (!char.isGap && char.house === activeTab && !isDimmed)
+              ? (theme.customColor || (isHead ? undefined : undefined))
+              : undefined,
+          // Custom style override for border color if using tailwind classes isn't enough for dynamic themes
+          // If Head of House, enforce the border color strongly
+          ...(isHead && !isDimmed && char.house === activeTab ? { borderColor: theme.customColor || (themeConfig.borderColor.replace('border-', '').replace('text-', '') /* rough fallback, better to use accentColor hex if available, but here we rely on classes mostly */) } : {}),
+
           boxShadow: (!char.isGap && char.isKing && char.house === activeTab && theme.customColor) ? `0 0 25px ${theme.customColor}66` : undefined,
           transition: draggingNode === char.id ? 'none' : 'transform 0.2s, box-shadow 0.2s, border-color 0.3s'
       }}
@@ -113,6 +126,7 @@ const CharacterNode: React.FC<CharacterNodeProps> = ({
               {/* --- ICONOS DE ESTADO (Bottom Right Vertical) --- */}
               <div className="absolute bottom-16 right-3 z-20 flex flex-col gap-2 items-center pointer-events-auto">
                   {char.isKing && <div title="Monarca"><Crown size={14} className="text-yellow-500 drop-shadow-md"/></div>}
+                  {isHead && <div title="Cabeza de Casa"><Castle size={14} className="text-zinc-300 drop-shadow-md" style={theme.customColor ? { color: theme.customColor } : {}}/></div>}
                   {char.isDragonRider && <div title={`Jinete de ${char.dragonName || 'Dragón'}`}><Flame size={14} className="text-orange-500 drop-shadow-md"/></div>}
                   {char.isBastard && <div title="Bastardo"><Ban size={14} className="text-zinc-400 drop-shadow-md"/></div>}
                   {char.isDisputed && (
