@@ -61,6 +61,7 @@ export default function App() {
   const [timelineYear, setTimelineYear] = useState<number | null>(null);
   const [showDragonRiders, setShowDragonRiders] = useState(false);
   const [showKings, setShowKings] = useState(false);
+  const [showHeadsOfHouse, setShowHeadsOfHouse] = useState(false);
   const [collapsedNodes, setCollapsedNodes] = useState<Set<string>>(new Set());
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
 
@@ -255,6 +256,9 @@ export default function App() {
   const isNodeDimmed = useCallback((char: Character) => {
     if (showDragonRiders && !char.isDragonRider) return true;
     if (showKings && !char.isKing) return true;
+    // Show Heads implies showing Heads OR Kings (who are heads)
+    // If filtering by heads, and not head/king, hide it.
+    if (showHeadsOfHouse && !char.isHeadOfHouse && !char.isKing) return true;
 
     if (timelineYear !== null) {
         // Use effective dates (explicit or inferred)
@@ -270,7 +274,7 @@ export default function App() {
         if (death < timelineYear) return true; // Already dead
     }
     return false;
-  }, [showDragonRiders, showKings, timelineYear, effectiveDates]);
+  }, [showDragonRiders, showKings, timelineYear, effectiveDates, showHeadsOfHouse]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.8);
@@ -976,7 +980,9 @@ export default function App() {
           onToggleDragonRiders={() => setShowDragonRiders(prev => !prev)}
           showKings={showKings}
           onToggleKings={() => setShowKings(prev => !prev)}
-          onReset={() => { setTimelineYear(null); setShowDragonRiders(false); setShowKings(false); }}
+          showHeadsOfHouse={showHeadsOfHouse}
+          onToggleHeadsOfHouse={() => setShowHeadsOfHouse(prev => !prev)}
+          onReset={() => { setTimelineYear(null); setShowDragonRiders(false); setShowKings(false); setShowHeadsOfHouse(false); }}
           events={timelineEvents}
           onOpenEventsManager={() => setIsTimelineManagerOpen(true)}
       />

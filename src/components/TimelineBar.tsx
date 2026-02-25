@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { RotateCcw, Flame, Crown, Settings } from 'lucide-react';
+import { RotateCcw, Flame, Crown, Settings, Castle } from 'lucide-react';
 import { formatYear } from '../utils/date';
 import { TimelineEvent } from '../types';
 
@@ -12,6 +12,8 @@ interface TimelineBarProps {
   onToggleDragonRiders: () => void;
   showKings: boolean;
   onToggleKings: () => void;
+  showHeadsOfHouse?: boolean;
+  onToggleHeadsOfHouse?: () => void;
   onReset: () => void;
   events?: TimelineEvent[];
   onOpenEventsManager?: () => void;
@@ -26,6 +28,8 @@ const TimelineBar: React.FC<TimelineBarProps> = ({
   onToggleDragonRiders,
   showKings,
   onToggleKings,
+  showHeadsOfHouse = false,
+  onToggleHeadsOfHouse,
   onReset,
   events = [],
   onOpenEventsManager
@@ -137,6 +141,16 @@ const TimelineBar: React.FC<TimelineBarProps> = ({
         >
           <Crown size={18} />
         </button>
+
+        {onToggleHeadsOfHouse && (
+            <button
+                onClick={onToggleHeadsOfHouse}
+                title="Cabezas de Casa"
+                className={`p-2 rounded-lg border transition-all ${showHeadsOfHouse ? 'bg-zinc-700 text-zinc-200 border-zinc-500' : 'bg-transparent text-zinc-500 border-transparent hover:bg-zinc-800 hover:text-zinc-300'}`}
+            >
+                <Castle size={18} />
+            </button>
+        )}
 
         <div className="w-px h-8 bg-zinc-800 mx-1" />
 
