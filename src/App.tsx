@@ -867,8 +867,19 @@ export default function App() {
     setPosition({ x: newX, y: 100 }); 
   };
 
+  // Effect to handle explicit focus requests (e.g. from search)
   useEffect(() => {
-    if (focusTarget) { centerView(focusTarget); setFocusTarget(null); } else { centerView(); }
+    if (focusTarget) {
+        centerView(focusTarget);
+        setFocusTarget(null);
+    }
+  }, [focusTarget]);
+
+  // Effect to handle tab changes (default center on root if no explicit focus)
+  useEffect(() => {
+    if (!focusTarget) {
+        centerView();
+    }
   }, [activeTab]);
 
   const openModalWrapper = useCallback((mode: typeof modalMode, charId: string) => {
