@@ -861,10 +861,16 @@ export default function App() {
     }
     if (!targetChar) { setPosition({ x: window.innerWidth/2, y: 100 }); return; }
     const centerX = (targetChar.x * X_SPACING) + (CARD_WIDTH/2);
+    const centerY = (targetChar.generation * Y_SPACING) + (CARD_WIDTH/2); // Using CARD_WIDTH/2 as height approximation or similar vertical center
+
     const screenCenter = window.innerWidth / 2;
+    const screenHeight = window.innerHeight / 2; // Target center of screen vertically too
+
     const newX = screenCenter - (centerX * targetScale);
+    const newY = screenHeight - (centerY * targetScale);
+
     setScale(targetScale);
-    setPosition({ x: newX, y: 100 }); 
+    setPosition({ x: newX, y: newY });
   };
 
   // Effect to handle explicit focus requests (e.g. from search)
